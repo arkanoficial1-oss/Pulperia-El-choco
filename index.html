@@ -319,7 +319,26 @@ async function loadFromCloud() {
   updateCloudStatus('🔄 Conectando...', 'var(--yellow)');
   try {
     const res = await fetch(SCRIPT_URL + '?t=' + Date.now(), { cache: 'no-store', credentials: 'omit', redirect: 'follow', mode: 'cors' });
-    let cd = JSON.parse(await res.text()); if(cd && cd.products) { data = sanitizeData(cd); localStorage.setItem('negocio_data', JSON.stringify(data)); updateCloudStatus('🟢 Conectado', 'var(--green)'); } else throw new Error();
+    let cd = JSON.parse(await res.text()); 
+    if(cd && cd.products) { 
+      
+      // --- INICIO DE LA CIRUGÍA: Rescate de pedidos locales ---
+      const localOrders = data.onlineOrders || [];
+      if(!cd.onlineOrders) cd.onlineOrders = [];
+      localOrders.forEach(lo => {
+         // Si el pedido está en el celular/PC pero aún no subió a la nube, lo rescatamos
+         if(!cd.onlineOrders.find(co => co.id === lo.id)) cd.onlineOrders.push(lo);
+      });
+      // --- FIN DE LA CIRUGÍA ---
+
+      data = sanitizeData(cd); 
+      localStorage.setItem('negocio_data', JSON.stringify(data)); 
+      updateCloudStatus('🟢 Conectado', 'var(--green)'); 
+      
+      // Si rescatamos un pedido que no estaba en la nube, forzamos a que suba ahora mismo
+      if (localOrders.length > 0) saveToCloud(); 
+
+    } else throw new Error();
   } catch(e) { updateCloudStatus('📱 Local (sin nube)', 'var(--accent)'); }
   if(appMode === 'client' && loggedInClient) { if(!data.clients.find(c => String(c.id) === String(loggedInClient.id))) logoutClient(); else refreshClientDashboard(); }
 }
