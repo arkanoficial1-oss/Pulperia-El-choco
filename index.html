@@ -321,14 +321,21 @@ async function loadFromCloud() {
     const res = await fetch(SCRIPT_URL + '?t=' + Date.now(), { cache: 'no-store', credentials: 'omit', redirect: 'follow', mode: 'cors' });
     let cd = JSON.parse(await res.text()); if(cd && cd.products) { data = sanitizeData(cd); localStorage.setItem('negocio_data', JSON.stringify(data)); updateCloudStatus('🟢 Conectado', 'var(--green)'); } else throw new Error();
   } catch(e) { updateCloudStatus('📱 Local (sin nube)', 'var(--accent)'); }
-  if(appMode === 'client' && loggedInClient) { if(!data.clients.find(c => c.id === loggedInClient.id)) logoutClient(); else refreshClientDashboard(); }
+  if(appMode === 'client' && loggedInClient) { if(!data.clients.find(c => String(c.id) === String(loggedInClient.id))) logoutClient(); else refreshClientDashboard(); }
 }
 let syncTimeout; function saveToCloud() { if(appMode !== 'admin' && appMode !== 'client') return; updateCloudStatus('🔄 Subiendo...', 'var(--accent)'); clearTimeout(syncTimeout); syncTimeout = setTimeout(() => { fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(data) }).then(() => updateCloudStatus('🟢 Guardado', 'var(--green)')).catch(() => updateCloudStatus('🔴 Error al subir', 'var(--accent2)')); }, 2000); }
 function save() { localStorage.setItem('negocio_data', JSON.stringify(data)); saveToCloud(); }
 function newId(){ return Date.now() + Math.floor(Math.random()*1000); }
 function fmt(n){ return 'RD$'+Number(n||0).toLocaleString('es-DO',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+// FECHAS (Protegido contra Invalid Date)
 function today(){ return new Date().toISOString().split('T')[0]; }
-function dateStr(iso){ return new Date(iso).toLocaleString('es-DO',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }
+function dateStr(iso){ 
+    if(!iso) return '—';
+    let d = new Date(iso);
+    if(isNaN(d.getTime())) return 'Fecha Inválida';
+    return d.toLocaleString('es-DO',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); 
+}
 function allProds(){ return [...data.products,...data.recipes]; }
 
 // CLIENTE
@@ -369,11 +376,12 @@ function handleAuth() {
 
 function logoutClient() { loggedInClient = null; localStorage.removeItem('client_logged_in'); document.getElementById('auth-name').value = ''; document.getElementById('auth-phone').value = ''; document.getElementById('auth-pin').value = ''; checkAuthName(); showClientPage('account', document.getElementById('nav-account')); }
 
+// === MODIFICACIÓN: DASHBOARD DEL CLIENTE (MUESTRA ESTADOS REALES) ===
 function refreshClientDashboard() { 
     if(!loggedInClient) return; 
     document.getElementById('dash-name').textContent = `Hola, ${loggedInClient.name}`; 
     document.getElementById('dash-phone').textContent = loggedInClient.phone || ''; 
-    const res = document.getElementById('client-account-result'), sls = data.sales.filter(s => s.clientId == loggedInClient.id && !s.paid), td = sls.reduce((s, x) => s + x.total, 0); 
+    const res = document.getElementById('client-account-result'), sls = data.sales.filter(s => String(s.clientId) === String(loggedInClient.id) && !s.paid), td = sls.reduce((s, x) => s + x.total, 0); 
     if(td > 0) { 
         let ht = `<div class="debt-card"><div style="font-size:1.5rem">🔴</div><h3 style="color:var(--accent2); margin:8px 0;">Balance Pendiente</h3><div style="font-size:2rem; font-weight:800;">${fmt(td)}</div><p style="font-size:0.85rem; margin-top:12px; font-weight:bold;">Para pagar, realiza una transferencia a:</p><div style="background:#00000033; padding:10px; border-radius:8px; margin-top:8px; text-align:left; font-size:0.9rem;">🏦 <strong>Banco Popular</strong> (Corriente)<br>🔢 Cuenta: <strong>852775865</strong><br>📱 WhatsApp: <strong>809 886 3186</strong></div><div style="text-align:left; margin-top:12px; background:#00000033; padding:10px; border-radius:8px;">`; 
         sls.forEach(s => { 
@@ -384,9 +392,18 @@ function refreshClientDashboard() {
     } else { 
         res.innerHTML = `<div class="ok-card"><div style="font-size:2rem">✅</div><h3 style="color:var(--green); margin:8px 0;">¡Estás al día!</h3><p style="font-size:0.9rem;">No tienes deudas pendientes.</p></div>`; 
     } 
-    const wb = document.getElementById('client-web-orders'), mo = (data.onlineOrders || []).filter(o => o.clientId == loggedInClient.id); 
+    
+    const wb = document.getElementById('client-web-orders'), mo = (data.onlineOrders || []).filter(o => String(o.clientId) === String(loggedInClient.id)); 
     if(mo.length > 0) { 
-        wb.innerHTML = mo.map(o => `<div class="card" style="padding:12px;"><div class="flex-between" style="font-size:0.8rem; color:var(--muted); margin-bottom:8px;"><span>${dateStr(o.date)}</span><span class="badge badge-yellow">En Local ⏳</span></div><div style="font-size:0.9rem;">${o.items.map(i=>`${i.qty}x ${i.name}`).join(', ')}</div><div class="flex-between mt-10"><span class="fw-bold text-yellow">${fmt(o.total)}</span><span style="font-size:0.8rem">${o.payType}</span></div></div>`).join(''); 
+        wb.innerHTML = mo.map(o => {
+            const sMap = { 
+                'pending': { t: 'Pendiente ⏳', c: 'var(--yellow)' }, 
+                'preparing': { t: 'En Preparación 🍳', c: 'var(--blue)' }, 
+                'ready': { t: '¡Listo! ✅', c: 'var(--green)' } 
+            };
+            const st = sMap[o.status || 'pending'];
+            return `<div class="card" style="padding:12px; border-left: 4px solid ${st.c};"><div class="flex-between" style="font-size:0.8rem; color:var(--muted); margin-bottom:8px;"><span>${dateStr(o.date)}</span><span class="badge" style="background:${st.c}22; color:${st.c};">${st.t}</span></div><div style="font-size:0.9rem;">${o.items.map(i=>`${i.qty}x ${i.name}`).join(', ')}</div><div class="flex-between mt-10"><span class="fw-bold text-yellow">${fmt(o.total)}</span><span style="font-size:0.8rem">${o.payType}</span></div></div>`;
+        }).join(''); 
     } else wb.innerHTML = `<p class="text-muted" style="text-align:center; font-size:0.85rem;">No tienes pedidos en preparación.</p>`; 
 }
 
@@ -441,7 +458,8 @@ async function sendWebOrder() {
 
     const no = { 
         id: newId(), date: new Date().toISOString(), clientId: loggedInClient.id, clientName: loggedInClient.name, clientPhone: loggedInClient.phone || "", 
-        payType: pt, creditDays: cd, receipt: receiptBase64, items: storeCart.map(i => ({...i})), total: storeCart.reduce((s,i) => s + (i.price*i.qty), 0), status: 'pending' 
+        payType: pt, creditDays: cd, receipt: receiptBase64, items: storeCart.map(i => ({...i})), total: storeCart.reduce((s,i) => s + (i.price*i.qty), 0), 
+        status: 'pending' // SIEMPRE ENTRA COMO PENDIENTE
     }; 
 
     try { fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'newOrder', order: no }) }); } catch(e) {} 
@@ -478,7 +496,28 @@ function clearPosCart(){posCart=[];renderPosCart();}
 function renderPosCart(){ const w=document.getElementById('admin-cart-items'); if(!posCart.length){w.innerHTML='<p class="text-muted" style="padding:16px 0;text-align:center;">Toca un producto →</p>'; document.getElementById('admin-cart-subtotal').textContent='RD$0.00'; document.getElementById('admin-cart-total').textContent='RD$0.00'; return;} w.innerHTML=posCart.map((i,idx)=>`<div class="cart-item"><span style="font-size:1.2rem">${i.emoji}</span><span style="flex:1;font-size:.875rem">${i.name}</span><div class="cart-qty"><button class="qty-btn" onclick="updatePosCartQty(${idx},-1)">−</button><span>${i.qty}</span><button class="qty-btn" onclick="updatePosCartQty(${idx},+1)">+</button></div><span class="text-yellow" style="min-width:68px;text-align:right;font-size:.85rem">${fmt(i.price*i.qty)}</span></div>`).join(''); const t=posCart.reduce((s,i)=>s+i.price*i.qty,0); document.getElementById('admin-cart-subtotal').textContent=fmt(t); document.getElementById('admin-cart-total').textContent=fmt(t); }
 function completePosSale(){ if(!posCart.length) return alert('Vacío'); const pt=document.getElementById('admin-pos-payment').value; let cd=0, dd=null; if(pt==='credito5') cd=5; if(pt==='credito') cd=parseInt(document.getElementById('admin-pos-credit-days').value)||5; if(cd>0){ const d=new Date(); d.setDate(d.getDate()+cd); dd=d.toISOString().split('T')[0]; } const rId=document.getElementById('admin-pos-client').value, cId=rId?parseInt(rId):null, c=cId?data.clients.find(x=>x.id===cId):null, t=posCart.reduce((s,i)=>s+i.price*i.qty,0), s={id:newId(),date:new Date().toISOString(), clientId: cId, clientName: c?c.name:'Al Contado', items:posCart.map(i=>({...i})),total:t,payType:pt,creditDays:cd,dueDate:dd, paid:pt==='inmediato'||pt==='transferencia'}; s.items.forEach(i=>{ if(i.type!=='recipe'){const p=data.products.find(x=>x.id==i.id);if(p) p.stock=Math.max(0,p.stock-i.qty);} }); data.sales.push(s); save(); posCart=[]; renderPosCart(); updateAlertBadge(); alert(`✅ Venta a ${s.clientName}\nTotal: ${fmt(t)}`); }
 
-// ADMIN WEB ORDERS
+// === MODIFICACIÓN: ADMIN WEB ORDERS (ESTADOS Y WHATSAPP) ===
+function markOrderPreparing(id) {
+    const o = data.onlineOrders.find(x => x.id === id);
+    if(!o) return;
+    o.status = 'preparing';
+    save();
+    renderWebOrders();
+}
+
+function notifyOrderReady(id) { 
+    const o = data.onlineOrders.find(x => x.id === id); 
+    if(!o) return;
+    o.status = 'ready';
+    save();
+    renderWebOrders();
+
+    if(!o.clientPhone) return alert("El cliente no tiene teléfono guardado, pero el pedido ya figura como 'Listo'."); 
+    let m = `Hola *${o.clientName}* 👋\n\n¡Tu pedido ya está LISTO! 🎉\n\nTotal a pagar: ${fmt(o.total)}\n\nTe esperamos.`; 
+    let ph = o.clientPhone.replace(/\D/g,''); 
+    window.open(`https://wa.me/${ph}?text=${encodeURIComponent(m)}`, '_blank'); 
+}
+
 function renderWebOrders() { 
     const tb = document.getElementById('weborders-body'), bd = document.getElementById('web-badge'), o = data.onlineOrders || []; 
     bd.textContent = o.length; bd.style.display = o.length > 0 ? 'inline' : 'none'; 
@@ -487,21 +526,26 @@ function renderWebOrders() {
     tb.innerHTML = o.map(x => { 
         const pl = {inmediato:'💵 Efectivo', transferencia:'🏦 Transf.', credito5:'📅 Fiado 5 días', credito:`📅 Fiado ${x.creditDays||0} días`}[x.payType] || x.payType; 
         const imgBtn = x.receipt ? `<br><a href="${x.receipt}" target="_blank" style="color:var(--blue); font-size:0.75rem; text-decoration:underline; display:inline-block; margin-top:4px;">🖼️ Ver Comprobante</a>` : '';
+        
+        const st = x.status || 'pending';
+        let actionBtns = '';
+        if(st === 'pending') actionBtns += `<button class="btn btn-edit btn-sm" onclick="markOrderPreparing(${x.id})" title="Marcar en preparación">🍳 Preparar</button> `;
+        else if(st === 'preparing') actionBtns += `<button class="btn btn-whatsapp btn-sm" onclick="notifyOrderReady(${x.id})" title="Avisar por WhatsApp">🔔 Listo</button> `;
+        else if(st === 'ready') actionBtns += `<span class="badge badge-green" style="margin-right:8px;">Listo ✅</span>`;
+
         return `<tr style="background:#f7b7310a">
             <td style="font-size:.78rem">${dateStr(x.date)}</td>
             <td><strong>${x.clientName}</strong><br><span style="font-size:.75rem;color:var(--muted)">📞 ${x.clientPhone}</span></td>
             <td style="font-size:.78rem">${x.items.map(i=>`${i.qty}x ${i.emoji} ${i.name}`).join('<br>')}</td>
             <td><div class="text-yellow fw-bold">${fmt(x.total)}</div><div style="font-size:0.75rem; color:var(--muted);">${pl}</div>${imgBtn}</td>
-            <td style="white-space:nowrap;">
-                <button class="btn btn-whatsapp btn-sm" onclick="notifyOrderReady(${x.id})">🔔</button> 
-                <button class="btn btn-success btn-sm" onclick="openApproveWeb(${x.id})">✅</button> 
-                <button class="btn btn-danger btn-sm" onclick="deleteWebOrder(${x.id})">🗑️</button>
+            <td style="white-space:nowrap; display:flex; gap:6px; align-items:center;">
+                ${actionBtns}
+                <button class="btn btn-success btn-sm" onclick="openApproveWeb(${x.id})" title="Cobrar pedido">✅ Cobrar</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteWebOrder(${x.id})" title="Cancelar pedido">🗑️</button>
             </td>
         </tr>`; 
     }).join(''); 
 }
-
-function notifyOrderReady(id) { const o = data.onlineOrders.find(x => x.id === id); if(!o || !o.clientPhone) return; let m = `Hola *${o.clientName}*\n\n¡Tu pedido está LISTO!\nTotal: ${fmt(o.total)}`, ph = o.clientPhone.replace(/\D/g,''); window.open(`https://wa.me/${ph}?text=${encodeURIComponent(m)}`, '_blank'); }
 
 function openApproveWeb(id) { 
     const o = data.onlineOrders.find(x => x.id === id); if(!o) return; 
