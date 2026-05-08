@@ -1248,5 +1248,21 @@ function importData(event){
   reader.readAsText(file); 
 }
 </script>
+
+<script>
+// Init — runs after all HTML is loaded
+(function() {
+  var href = window.location.href + window.location.search;
+  if(href.indexOf('tienda') !== -1) {
+    document.getElementById('landing-wrapper').style.display = 'none';
+    appMode = 'client';
+    document.getElementById('client-wrapper').style.display = 'block';
+    loadFromCloud().then(function() { 
+      tryAutoLogin();
+      renderClientCatalog();
+    });
+  }
+})();
+</script>
 </body>
 </html>
