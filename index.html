@@ -92,10 +92,6 @@
   .total-box { background:var(--surface2); border:1px solid var(--accent); border-radius:var(--radius); padding:20px; text-align:center; }
   .debt-card { background:#ff6b6b15; border:1px solid #ff6b6b44; border-radius:8px; padding:16px; margin-top:20px; text-align:center; }
   .ok-card { background:#26de8115; border:1px solid #26de8144; border-radius:8px; padding:16px; margin-top:20px; text-align:center; }
-
-  #landing-wrapper { display: flex; }
-  #client-wrapper { display: none; }
-  #admin-wrapper { display: none; }
 </style>
 </head>
 <body>
@@ -165,12 +161,7 @@
         </select>
       </div>
       
-      <div id="checkout-login-warning" style="display:none; background:#f7b73122; border:2px solid var(--accent); border-radius:12px; padding:16px; text-align:center; margin-top:10px;">
-        <p style="font-size:0.95rem; font-weight:700; color:var(--accent); margin-bottom:8px;">👤 Debes entrar a tu cuenta primero</p>
-        <p style="font-size:0.82rem; color:var(--muted); margin-bottom:12px;">Para enviar tu pedido necesitas estar identificado.</p>
-        <button onclick="goToAccountFromCart()" class="btn btn-primary w100" style="padding:12px; border-radius:10px;">Entrar / Crear cuenta →</button>
-      </div>
-      <button id="checkout-btn" class="btn btn-primary w100" style="padding:16px; font-size:1.1rem; border-radius:12px; margin-top:10px; display:none;" onclick="sendWebOrder()">✅ Enviar Pedido al Local</button>
+      <button id="checkout-btn" class="btn btn-primary w100" style="padding:16px; font-size:1.1rem; border-radius:12px; margin-top:10px;" onclick="sendWebOrder()">✅ Enviar Pedido al Local</button>
     </div>
   </div>
 
@@ -276,9 +267,9 @@
   </div>
 
   <nav class="client-nav">
-    <button class="c-nav-item" onclick="showClientPage('catalog', this)"><div class="icon">🏠</div>Catálogo</button>
+    <button class="c-nav-item active" onclick="showClientPage('catalog', this)"><div class="icon">🏠</div>Catálogo</button>
     <button class="c-nav-item" onclick="showClientPage('cart', this)"><div class="icon">🛒<span id="client-cart-badge" class="c-cart-badge">0</span></div>Mi Pedido</button>
-    <button class="c-nav-item active" onclick="showClientPage('account', this)"><div class="icon">👤</div>Mi Cuenta</button>
+    <button class="c-nav-item" onclick="showClientPage('account', this)"><div class="icon">👤</div>Mi Cuenta</button>
   </nav>
 </div>
 
@@ -453,39 +444,20 @@ if(!data.onlineOrders) data.onlineOrders = [];
 let posCart = []; 
 let storeCart = []; 
 
-// Detectar modo tienda — funciona con ?tienda o #tienda o /tienda
-function isTiendaMode() {
-  return window.location.search.includes('tienda') || 
-         window.location.hash.includes('tienda') ||
-         window.location.href.includes('tienda');
+// Si el link tiene "?tienda", entra directo al catálogo sin preguntar nombre
+window.onload = () => {
+  if(window.location.search.includes('tienda')) {
+    document.getElementById('landing-wrapper').style.display = 'none';
+    appMode = 'client';
+    document.getElementById('client-wrapper').style.display = 'block';
+    
+    // Solo mostramos el catálogo inicialmente
+    loadFromCloud().then(() => { 
+      renderClientCatalog();
+      tryAutoLogin();
+    });
+  }
 }
-
-// Run immediately, don't wait for DOMContentLoaded
-(function initApp() {
-  function start() {
-    if(isTiendaMode()) {
-      var lw = document.getElementById('landing-wrapper');
-      var cw = document.getElementById('client-wrapper');
-      if(lw) lw.style.display = 'none';
-      if(cw) cw.style.display = 'block';
-      appMode = 'client';
-      loadFromCloud().then(function() { 
-        tryAutoLogin();
-        if(loggedClient) {
-          showClientPage('catalog', document.querySelectorAll('.c-nav-item')[0]);
-        } else {
-          showClientPage('account', document.querySelectorAll('.c-nav-item')[2]);
-          onAccountTabOpen();
-        }
-      });
-    }
-  }
-  if(document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', start);
-  } else {
-    start();
-  }
-})();
 
 // ============ INICIO ADMIN ============
 function enterAdminMode() {
@@ -817,15 +789,11 @@ function confirmClientLogin() {
   loggedClient = selectedClientForLogin;
   localStorage.setItem('client_session', JSON.stringify({id: loggedClient.id}));
   showClientDashboard();
-  // Después de 1.5s ir al catálogo
-  setTimeout(() => {
-    if(localStorage.getItem('cart_return')) {
-      localStorage.removeItem('cart_return');
-      showClientPage('cart', document.querySelectorAll('.c-nav-item')[1]);
-    } else {
-      showClientPage('catalog', document.querySelectorAll('.c-nav-item')[0]);
-    }
-  }, 1500);
+  // Si venía del carrito, regresar
+  if(localStorage.getItem('cart_return')) {
+    localStorage.removeItem('cart_return');
+    setTimeout(() => showClientPage('cart', document.querySelectorAll('.c-nav-item')[1]), 1000);
+  }
 }
 
 // Validar formulario de registro en tiempo real
