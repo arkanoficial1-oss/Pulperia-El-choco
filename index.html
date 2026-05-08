@@ -165,51 +165,100 @@
     </div>
   </div>
 
-  <div id="client-page-account" class="client-page">
-    <!-- ESTADO: sin sesión -->
-    <div id="account-login-view">
-      <h2 class="section-title">👤 Mi Cuenta</h2>
-      <p style="font-size:0.85rem; color:var(--muted); margin-bottom:20px;">Ingresa tu teléfono para ver tus pedidos y deudas, o regístrate si eres nuevo.</p>
-      <div class="form-group">
-        <label>📱 Tu Teléfono (WhatsApp)</label>
-        <input type="tel" id="client-account-phone" placeholder="Ej: 8091234567" style="font-size:1.1rem; padding:14px;">
-      </div>
-      <button class="btn btn-primary w100" style="padding:14px; margin-bottom:12px;" onclick="loginClientAccount()">🔍 Entrar a mi cuenta</button>
-      <button class="btn w100" style="padding:12px; background:var(--surface2); color:var(--text);" onclick="showRegisterForm()">➕ Soy nuevo — Registrarme</button>
-      <div id="account-login-msg" style="margin-top:12px;"></div>
+  <div id="client-page-account" class="client-page" style="padding:0; overflow:hidden;">
+
+    <!-- PANTALLA 1: Bienvenida animada -->
+    <div id="acc-welcome" style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:80vh; padding:24px; text-align:center; animation: fadeIn .5s ease;">
+      <div style="font-size:4rem; margin-bottom:12px; animation: bounceIn .6s ease;">👋</div>
+      <h2 style="font-family:'Syne',sans-serif; font-size:1.6rem; font-weight:800; margin-bottom:8px; color:var(--text);">¡Bienvenido!</h2>
+      <p style="color:var(--muted); font-size:0.95rem; margin-bottom:32px; line-height:1.5;">Aquí puedes ver tus pedidos,<br>tus deudas y todo tu historial.</p>
+      <button onclick="accShow('acc-hasaccount')" class="btn btn-primary w100" style="padding:16px; font-size:1.05rem; border-radius:14px; margin-bottom:12px;">
+        ✅ Sí, ya tengo cuenta
+      </button>
+      <button onclick="accShow('acc-register')" style="width:100%; padding:14px; font-size:1rem; border-radius:14px; background:var(--surface2); color:var(--text); border:none; cursor:pointer;">
+        ➕ Soy nuevo, quiero registrarme
+      </button>
     </div>
 
-    <!-- ESTADO: registro -->
-    <div id="account-register-view" style="display:none;">
-      <h2 class="section-title">➕ Crear Cuenta</h2>
-      <p style="font-size:0.85rem; color:var(--muted); margin-bottom:16px;">Llena tus datos para registrarte como cliente.</p>
-      <div class="form-group">
-        <label>👤 Tu Nombre Completo</label>
-        <input type="text" id="reg-name" placeholder="Ej: Juan Pérez">
+    <!-- PANTALLA 2: Buscar cuenta por nombre -->
+    <div id="acc-hasaccount" style="display:none; padding:24px; animation: slideIn .3s ease;">
+      <button onclick="accShow('acc-welcome')" style="background:none;border:none;color:var(--muted);cursor:pointer;margin-bottom:16px;font-size:0.9rem;">← Volver</button>
+      <h2 style="font-family:'Syne',sans-serif; font-size:1.4rem; font-weight:800; margin-bottom:6px;">Busca tu nombre</h2>
+      <p style="color:var(--muted); font-size:0.85rem; margin-bottom:20px;">Escribe tu nombre y selecciónate de la lista.</p>
+      <div class="form-group" style="position:relative;">
+        <label style="color:var(--accent); font-weight:600; font-size:0.85rem;">👤 Tu nombre</label>
+        <input type="text" id="acc-search-name" placeholder="Ej: Juan Pérez" autocomplete="off"
+          oninput="searchClientByName(this.value)"
+          style="border:2px solid var(--accent); font-size:1rem; padding:14px; border-radius:12px;">
+        <div id="acc-search-results" style="position:absolute; left:0; right:0; background:var(--surface2); border-radius:12px; border:1px solid var(--border); max-height:200px; overflow-y:auto; z-index:99; margin-top:4px; display:none;"></div>
       </div>
-      <div class="form-group">
-        <label>📱 Tu Teléfono (WhatsApp)</label>
-        <input type="tel" id="reg-phone" placeholder="Ej: 8091234567">
+
+      <!-- Confirmación de cliente seleccionado -->
+      <div id="acc-selected-client" style="display:none; background:var(--surface2); border-radius:14px; padding:16px; margin-top:12px; border:2px solid var(--accent);">
+        <p style="font-size:0.8rem; color:var(--muted); margin-bottom:4px;">Cliente seleccionado:</p>
+        <p id="acc-selected-name" style="font-size:1.1rem; font-weight:700; color:var(--text); margin-bottom:12px;"></p>
+        <button id="acc-confirm-btn" onclick="confirmClientLogin()" class="btn btn-primary w100" style="padding:13px; border-radius:12px;">
+          ✅ Entrar a mi cuenta
+        </button>
       </div>
-      <button class="btn btn-primary w100" style="padding:14px; margin-bottom:12px;" onclick="registerClientAccount()">✅ Crear mi cuenta</button>
-      <button class="btn w100" style="padding:12px; background:var(--surface2); color:var(--text);" onclick="showLoginForm()">← Volver</button>
-      <div id="account-register-msg" style="margin-top:12px;"></div>
+      <div id="acc-hasaccount-msg" style="margin-top:12px; font-size:0.85rem;"></div>
     </div>
 
-    <!-- ESTADO: sesión activa -->
-    <div id="account-dashboard-view" style="display:none;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-        <h2 class="section-title" style="margin:0;">👤 <span id="dash-client-name"></span></h2>
-        <button onclick="logoutClientAccount()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;">Salir 🚪</button>
+    <!-- PANTALLA 3: Registro nuevo -->
+    <div id="acc-register" style="display:none; padding:24px; animation: slideIn .3s ease;">
+      <button onclick="accShow('acc-welcome')" style="background:none;border:none;color:var(--muted);cursor:pointer;margin-bottom:16px;font-size:0.9rem;">← Volver</button>
+      <h2 style="font-family:'Syne',sans-serif; font-size:1.4rem; font-weight:800; margin-bottom:6px;">Crear cuenta</h2>
+      <p style="color:var(--muted); font-size:0.85rem; margin-bottom:20px;">Llena tus datos para registrarte.</p>
+
+      <div class="form-group">
+        <label style="color:var(--accent); font-weight:600; font-size:0.85rem;">👤 Tu nombre completo</label>
+        <input type="text" id="reg-name" placeholder="Ej: Juan Pérez" style="font-size:1rem; padding:14px; border-radius:12px;">
+        <!-- Sugerencias de coincidencia -->
+        <div id="reg-name-match" style="margin-top:8px; display:none;"></div>
+      </div>
+      <div class="form-group">
+        <label style="color:var(--accent); font-weight:600; font-size:0.85rem;">📱 Tu teléfono (WhatsApp)</label>
+        <input type="tel" id="reg-phone" placeholder="Ej: 8091234567" style="font-size:1rem; padding:14px; border-radius:12px;">
       </div>
 
-      <!-- Deuda -->
-      <div id="dash-debt-box" style="border-radius:14px; padding:16px; margin-bottom:16px; text-align:center;"></div>
+      <div id="acc-register-msg" style="margin-bottom:12px; font-size:0.85rem;"></div>
 
-      <!-- Pedidos recientes -->
-      <h3 style="font-size:0.9rem; color:var(--muted); margin-bottom:10px;">📋 Mis Compras</h3>
-      <div id="dash-sales-list"></div>
+      <button id="acc-register-btn" onclick="registerClientAccount()" class="btn btn-primary w100" style="padding:14px; border-radius:12px; font-size:1rem; opacity:0.5; cursor:not-allowed;" disabled>
+        ✅ Crear mi cuenta
+      </button>
     </div>
+
+    <!-- PANTALLA 4: Dashboard del cliente -->
+    <div id="acc-dashboard" style="display:none; animation: fadeIn .4s ease;">
+      <!-- Header -->
+      <div style="background:linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%); padding:20px 20px 16px; border-bottom:1px solid var(--border);">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <p style="font-size:0.75rem; color:var(--muted); margin-bottom:2px;">¡Hola!</p>
+            <h2 id="dash-client-name" style="font-family:'Syne',sans-serif; font-size:1.4rem; font-weight:800; color:var(--text); margin:0;"></h2>
+          </div>
+          <button onclick="logoutClientAccount()" style="background:var(--surface2); border:1px solid var(--border); color:var(--muted); cursor:pointer; border-radius:8px; padding:6px 12px; font-size:0.8rem;">
+            Salir 🚪
+          </button>
+        </div>
+      </div>
+
+      <div style="padding:16px; overflow-y:auto; max-height:calc(100vh - 180px);">
+        <!-- Caja de deuda -->
+        <div id="dash-debt-box" style="border-radius:16px; padding:20px; margin-bottom:16px; text-align:center;"></div>
+
+        <!-- Pedido activo (si tiene) -->
+        <div id="dash-active-order" style="display:none; background:var(--surface2); border-radius:14px; padding:16px; margin-bottom:16px; border-left:4px solid var(--accent);">
+          <p style="font-size:0.8rem; color:var(--accent); font-weight:600; margin-bottom:8px;">⏳ PEDIDO EN PROCESO</p>
+          <div id="dash-active-order-detail"></div>
+        </div>
+
+        <!-- Historial -->
+        <h3 style="font-size:0.85rem; color:var(--muted); margin-bottom:10px; font-weight:600; text-transform:uppercase; letter-spacing:1px;">📋 Mis Compras</h3>
+        <div id="dash-sales-list"></div>
+      </div>
+    </div>
+
   </div>
 
   <nav class="client-nav">
@@ -682,127 +731,196 @@ function startAdminPolling() {
 
 // ===== SISTEMA DE CUENTAS DE CLIENTE =====
 let loggedClient = null;
+let selectedClientForLogin = null;
 
-function showLoginForm() {
-  document.getElementById('account-login-view').style.display = '';
-  document.getElementById('account-register-view').style.display = 'none';
-  document.getElementById('account-dashboard-view').style.display = 'none';
+// Animaciones CSS
+const accStyles = document.createElement('style');
+accStyles.textContent = `
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes slideIn { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
+  @keyframes bounceIn { 0% { transform:scale(0.3); opacity:0; } 60% { transform:scale(1.1); } 100% { transform:scale(1); opacity:1; } }
+  .acc-result-item { padding:12px 14px; cursor:pointer; border-bottom:1px solid var(--border); transition:background .2s; font-size:0.95rem; }
+  .acc-result-item:hover { background:var(--accent); color:#000; }
+  .acc-result-item:last-child { border-bottom:none; }
+`;
+document.head.appendChild(accStyles);
+
+function accShow(id) {
+  ['acc-welcome','acc-hasaccount','acc-register','acc-dashboard'].forEach(v => {
+    const el = document.getElementById(v);
+    if(el) el.style.display = 'none';
+  });
+  const target = document.getElementById(id);
+  if(target) target.style.display = '';
 }
 
-function showRegisterForm() {
-  document.getElementById('account-login-view').style.display = 'none';
-  document.getElementById('account-register-view').style.display = '';
-  document.getElementById('account-dashboard-view').style.display = 'none';
-  // Pre-llenar teléfono si lo escribió
-  const phone = document.getElementById('client-account-phone').value.trim();
-  if(phone) document.getElementById('reg-phone').value = phone;
+function searchClientByName(val) {
+  const results = document.getElementById('acc-search-results');
+  const selected = document.getElementById('acc-selected-client');
+  if(!val || val.length < 2) { results.style.display = 'none'; selected.style.display = 'none'; selectedClientForLogin = null; return; }
+  
+  const matches = data.clients.filter(c => c.name.toLowerCase().includes(val.toLowerCase())).slice(0, 6);
+  if(matches.length === 0) { results.style.display = 'none'; return; }
+  
+  results.innerHTML = matches.map(c => 
+    `<div class="acc-result-item" onclick="selectClientForLogin(${c.id}, '${c.name.replace(/'/g,"\'")}')">
+      👤 ${c.name}${c.phone ? ' <span style="color:var(--muted);font-size:0.75rem;">• ' + c.phone + '</span>' : ''}
+    </div>`
+  ).join('');
+  results.style.display = '';
 }
 
-function loginClientAccount() {
-  const phone = document.getElementById('client-account-phone').value.trim().replace(/\D/g,'');
-  if(!phone || phone.length < 7) {
-    document.getElementById('account-login-msg').innerHTML = '<p style="color:var(--accent2)">⚠️ Ingresa un número válido.</p>';
-    return;
-  }
-  // Buscar cliente por teléfono
-  const client = data.clients.find(c => c.phone && c.phone.replace(/\D/g,'').includes(phone));
-  if(!client) {
-    document.getElementById('account-login-msg').innerHTML = `
-      <p style="color:var(--accent2)">❌ No encontramos cuenta con ese número.</p>
-      <p style="font-size:0.8rem; color:var(--muted); margin-top:6px;">¿Eres nuevo? Regístrate abajo.</p>`;
-    return;
-  }
-  // Login exitoso
-  loggedClient = client;
-  localStorage.setItem('client_session', JSON.stringify({id: client.id, phone: client.phone}));
+function selectClientForLogin(id, name) {
+  selectedClientForLogin = data.clients.find(c => c.id === id);
+  document.getElementById('acc-search-name').value = name;
+  document.getElementById('acc-search-results').style.display = 'none';
+  document.getElementById('acc-selected-name').textContent = name;
+  document.getElementById('acc-selected-client').style.display = '';
+}
+
+function confirmClientLogin() {
+  if(!selectedClientForLogin) return;
+  loggedClient = selectedClientForLogin;
+  localStorage.setItem('client_session', JSON.stringify({id: loggedClient.id}));
   showClientDashboard();
+}
+
+// Validar formulario de registro en tiempo real
+function setupRegisterValidation() {
+  const nameInput = document.getElementById('reg-name');
+  const phoneInput = document.getElementById('reg-phone');
+  const btn = document.getElementById('acc-register-btn');
+  if(!nameInput || !phoneInput || !btn) return;
+  
+  function validate() {
+    const nameOk = nameInput.value.trim().length >= 2;
+    const phoneOk = phoneInput.value.trim().replace(/\D/g,'').length >= 7;
+    btn.disabled = !(nameOk && phoneOk);
+    btn.style.opacity = (nameOk && phoneOk) ? '1' : '0.5';
+    btn.style.cursor = (nameOk && phoneOk) ? 'pointer' : 'not-allowed';
+  }
+  
+  nameInput.addEventListener('input', function() {
+    validate();
+    const val = this.value.trim();
+    if(val.length < 2) { document.getElementById('reg-name-match').style.display = 'none'; return; }
+    // Buscar coincidencias de nombre
+    const matches = data.clients.filter(c => c.name.toLowerCase().includes(val.toLowerCase()) && (!c.phone || c.phone === '')).slice(0,3);
+    const matchBox = document.getElementById('reg-name-match');
+    if(matches.length > 0) {
+      matchBox.style.display = '';
+      matchBox.innerHTML = '<p style="font-size:0.78rem; color:var(--accent); margin-bottom:6px;">💡 ¿Eres tú? Toca tu nombre para vincularlo:</p>' +
+        matches.map(c => `<div onclick="quickLinkClient(${c.id},'${c.name.replace(/'/g,"\'")}')" style="background:var(--surface); border:1px solid var(--accent); border-radius:8px; padding:8px 12px; cursor:pointer; font-size:0.85rem; margin-bottom:4px;">👤 ${c.name}</div>`).join('');
+    } else {
+      matchBox.style.display = 'none';
+    }
+  });
+  phoneInput.addEventListener('input', validate);
+}
+
+function quickLinkClient(id, name) {
+  // El cliente reconoce su nombre — vincular directamente
+  document.getElementById('reg-name').value = name;
+  document.getElementById('reg-name-match').style.display = 'none';
+  const btn = document.getElementById('acc-register-btn');
+  // Solo necesita confirmar el teléfono
+  const matchBox = document.getElementById('reg-name-match');
+  matchBox.style.display = '';
+  matchBox.innerHTML = `<div style="background:#26de8122; border:1px solid var(--green); border-radius:8px; padding:8px 12px; font-size:0.82rem; color:var(--green);">✅ ¡Te encontramos! Agrega tu teléfono y crea tu cuenta para ver tu historial.</div>`;
 }
 
 function registerClientAccount() {
   const name = document.getElementById('reg-name').value.trim();
   const phone = document.getElementById('reg-phone').value.trim().replace(/\D/g,'');
-  const msg = document.getElementById('account-register-msg');
+  const msg = document.getElementById('acc-register-msg');
   
-  if(!name) { msg.innerHTML = '<p style="color:var(--accent2)">⚠️ Ingresa tu nombre.</p>'; return; }
+  if(!name || name.length < 2) { msg.innerHTML = '<p style="color:var(--accent2)">⚠️ Ingresa tu nombre completo.</p>'; return; }
   if(!phone || phone.length < 7) { msg.innerHTML = '<p style="color:var(--accent2)">⚠️ Ingresa un teléfono válido.</p>'; return; }
   
-  // Verificar si ya existe con ese teléfono
-  const existing = data.clients.find(c => c.phone && c.phone.replace(/\D/g,'').includes(phone));
-  if(existing) {
-    msg.innerHTML = '<p style="color:var(--accent2)">⚠️ Ya existe una cuenta con ese teléfono. Intenta entrar.</p>';
+  // ¿Ya existe cuenta con ese teléfono?
+  const byPhone = data.clients.find(c => c.phone && c.phone.replace(/\D/g,'').includes(phone));
+  if(byPhone) {
+    loggedClient = byPhone;
+    localStorage.setItem('client_session', JSON.stringify({id: loggedClient.id}));
+    msg.innerHTML = '<p style="color:var(--green)">✅ ¡Ya tienes cuenta! Entrando...</p>';
+    setTimeout(() => showClientDashboard(), 700);
     return;
   }
   
-  // Verificar si hay un cliente con ese nombre (sin teléfono) para vincularlo
+  // ¿Existe cliente con ese nombre sin teléfono? Vincular
   const byName = data.clients.find(c => c.name.toLowerCase().trim() === name.toLowerCase().trim() && (!c.phone || c.phone === ''));
-  
   if(byName) {
-    // Vincular teléfono al cliente existente
     byName.phone = phone;
     loggedClient = byName;
   } else {
-    // Crear cliente nuevo
     const newClient = { id: newId(), name: name, phone: phone };
     data.clients.push(newClient);
     loggedClient = newClient;
   }
   
   save();
-  localStorage.setItem('client_session', JSON.stringify({id: loggedClient.id, phone: loggedClient.phone}));
-  
+  localStorage.setItem('client_session', JSON.stringify({id: loggedClient.id}));
   msg.innerHTML = '<p style="color:var(--green)">✅ ¡Cuenta creada!</p>';
-  setTimeout(() => showClientDashboard(), 800);
+  setTimeout(() => showClientDashboard(), 700);
 }
 
 function showClientDashboard() {
   if(!loggedClient) return;
+  accShow('acc-dashboard');
   
-  document.getElementById('account-login-view').style.display = 'none';
-  document.getElementById('account-register-view').style.display = 'none';
-  document.getElementById('account-dashboard-view').style.display = '';
   document.getElementById('dash-client-name').textContent = loggedClient.name;
   
-  // Calcular deuda
-  const unpaidSales = data.sales.filter(s => s.clientId == loggedClient.id && !s.paid);
-  const totalDebt = unpaidSales.reduce((s, x) => s + x.total, 0);
+  // Deuda pendiente
+  const unpaid = data.sales.filter(s => s.clientId == loggedClient.id && !s.paid);
+  const totalDebt = unpaid.reduce((s, x) => s + x.total, 0);
   const debtBox = document.getElementById('dash-debt-box');
   
   if(totalDebt > 0) {
-    debtBox.style.background = '#ff6b6b22';
-    debtBox.style.border = '1px solid var(--accent2)';
+    debtBox.style.cssText = 'border-radius:16px; padding:20px; margin-bottom:16px; text-align:center; background:#ff6b6b22; border:2px solid var(--accent2);';
     debtBox.innerHTML = `
-      <div style="font-size:1.5rem">🔴</div>
-      <p style="font-size:0.85rem; color:var(--muted); margin:4px 0;">Balance pendiente</p>
-      <div style="font-size:2.2rem; font-weight:800; color:var(--accent2); font-family:'Syne',sans-serif;">${fmt(totalDebt)}</div>
-      <p style="font-size:0.8rem; color:var(--muted); margin-top:6px;">${unpaidSales.length} compra(s) sin pagar</p>`;
+      <div style="font-size:2rem; margin-bottom:4px;">🔴</div>
+      <p style="font-size:0.8rem; color:var(--muted); margin-bottom:4px;">Balance pendiente</p>
+      <div style="font-size:2.4rem; font-weight:900; color:var(--accent2); font-family:'Syne',sans-serif; line-height:1;">${fmt(totalDebt)}</div>
+      <p style="font-size:0.78rem; color:var(--muted); margin-top:8px;">${unpaid.length} compra(s) sin pagar</p>`;
   } else {
-    debtBox.style.background = '#26de8122';
-    debtBox.style.border = '1px solid var(--green)';
+    debtBox.style.cssText = 'border-radius:16px; padding:20px; margin-bottom:16px; text-align:center; background:#26de8122; border:2px solid var(--green);';
     debtBox.innerHTML = `
-      <div style="font-size:1.5rem">✅</div>
-      <p style="font-size:0.9rem; color:var(--green); margin:6px 0; font-weight:600;">¡Estás al día!</p>
+      <div style="font-size:2rem; margin-bottom:4px;">✅</div>
+      <p style="font-size:0.9rem; color:var(--green); font-weight:700; margin-bottom:4px;">¡Estás al día!</p>
       <p style="font-size:0.8rem; color:var(--muted);">No tienes deudas pendientes.</p>`;
   }
   
-  // Mostrar todas las compras
+  // Pedido activo (onlineOrders pendiente)
+  const activeOrder = (data.onlineOrders || []).filter(o => o.clientId == loggedClient.id && o.status === 'pending');
+  const activeBox = document.getElementById('dash-active-order');
+  if(activeOrder.length > 0) {
+    const o = activeOrder[activeOrder.length-1];
+    activeBox.style.display = '';
+    document.getElementById('dash-active-order-detail').innerHTML = `
+      <div style="font-size:0.85rem; color:var(--text);">${o.items.map(i => i.qty+'x '+i.name).join(', ')}</div>
+      <div style="font-size:1.1rem; font-weight:700; color:var(--accent); margin-top:4px;">${fmt(o.total)}</div>`;
+  } else {
+    activeBox.style.display = 'none';
+  }
+  
+  // Historial de compras
   const allSales = data.sales.filter(s => s.clientId == loggedClient.id).sort((a,b) => new Date(b.date)-new Date(a.date));
   const salesList = document.getElementById('dash-sales-list');
   
   if(allSales.length === 0) {
-    salesList.innerHTML = '<p style="color:var(--muted); font-size:0.85rem; text-align:center; padding:20px;">Aún no tienes compras registradas.</p>';
+    salesList.innerHTML = '<div style="text-align:center; padding:24px; color:var(--muted); font-size:0.85rem;">Aún no tienes compras registradas.</div>';
     return;
   }
   
   salesList.innerHTML = allSales.map(s => {
-    const items = s.items.map(i => `${i.qty}x ${i.name}`).join(', ');
-    const statusColor = s.paid ? 'var(--green)' : 'var(--accent2)';
-    const statusText = s.paid ? '✅ Pagado' : '🔴 Pendiente';
-    return `<div style="background:var(--surface2); border-radius:10px; padding:12px; margin-bottom:8px;">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <span style="font-size:0.75rem; color:var(--muted);">${s.date.split('T')[0]}</span>
-        <span style="font-size:0.75rem; color:${statusColor}; font-weight:600;">${statusText}</span>
+    const items = s.items.map(i => i.qty+'x '+i.name).join(', ');
+    const paid = s.paid;
+    return `<div style="background:var(--surface2); border-radius:12px; padding:14px; margin-bottom:8px; border-left:3px solid ${paid ? 'var(--green)' : 'var(--accent2)'};">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+        <span style="font-size:0.72rem; color:var(--muted);">${s.date.split('T')[0]}</span>
+        <span style="font-size:0.72rem; font-weight:700; color:${paid ? 'var(--green)' : 'var(--accent2)'};">${paid ? '✅ Pagado' : '🔴 Pendiente'}</span>
       </div>
-      <div style="font-size:0.82rem; color:var(--muted); margin:4px 0;">${items}</div>
+      <div style="font-size:0.82rem; color:var(--muted); margin-bottom:4px;">${items}</div>
       <div style="font-size:1rem; font-weight:700; color:var(--accent);">${fmt(s.total)}</div>
     </div>`;
   }).join('');
@@ -810,12 +928,12 @@ function showClientDashboard() {
 
 function logoutClientAccount() {
   loggedClient = null;
+  selectedClientForLogin = null;
   localStorage.removeItem('client_session');
-  document.getElementById('client-account-phone').value = '';
-  showLoginForm();
+  document.getElementById('acc-search-name') && (document.getElementById('acc-search-name').value = '');
+  accShow('acc-welcome');
 }
 
-// Auto-login si hay sesión guardada
 function tryAutoLogin() {
   const session = JSON.parse(localStorage.getItem('client_session') || 'null');
   if(session && session.id) {
@@ -824,13 +942,12 @@ function tryAutoLogin() {
   }
 }
 
-// Llamar tryAutoLogin cuando se abre la pestaña de cuenta
 function onAccountTabOpen() {
+  setupRegisterValidation();
   if(loggedClient) { showClientDashboard(); }
-  else { showLoginForm(); }
+  else { accShow('acc-welcome'); }
 }
 
-// También pre-llenar el select de checkout si el cliente está logueado
 function prefillCheckoutIfLogged() {
   if(!loggedClient) return;
   const sel = document.getElementById('client-select-existing');
@@ -839,6 +956,9 @@ function prefillCheckoutIfLogged() {
   if(opt) { sel.value = loggedClient.id; toggleNewClientFields(); }
 }
 
+function showLoginForm() { accShow('acc-welcome'); }
+function showRegisterForm() { accShow('acc-register'); setupRegisterValidation(); }
+function loginClientAccount() { accShow('acc-hasaccount'); }
 function checkClientAccount() { loginClientAccount(); }
 
 // ============================================================================
