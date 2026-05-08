@@ -166,15 +166,50 @@
   </div>
 
   <div id="client-page-account" class="client-page">
-    <h2 class="section-title">👤 Estado de Cuenta</h2>
-    <p style="font-size:0.85rem; color:var(--muted); margin-bottom:20px;">Ingresa tu número de teléfono registrado (solo números) para consultar si tienes balances pendientes con nosotros.</p>
-    
-    <div class="form-group">
-      <input type="tel" id="client-account-phone" placeholder="Ej: 18091234567">
+    <!-- ESTADO: sin sesión -->
+    <div id="account-login-view">
+      <h2 class="section-title">👤 Mi Cuenta</h2>
+      <p style="font-size:0.85rem; color:var(--muted); margin-bottom:20px;">Ingresa tu teléfono para ver tus pedidos y deudas, o regístrate si eres nuevo.</p>
+      <div class="form-group">
+        <label>📱 Tu Teléfono (WhatsApp)</label>
+        <input type="tel" id="client-account-phone" placeholder="Ej: 8091234567" style="font-size:1.1rem; padding:14px;">
+      </div>
+      <button class="btn btn-primary w100" style="padding:14px; margin-bottom:12px;" onclick="loginClientAccount()">🔍 Entrar a mi cuenta</button>
+      <button class="btn w100" style="padding:12px; background:var(--surface2); color:var(--text);" onclick="showRegisterForm()">➕ Soy nuevo — Registrarme</button>
+      <div id="account-login-msg" style="margin-top:12px;"></div>
     </div>
-    <button class="btn btn-primary w100" style="padding:14px; margin-bottom:20px;" onclick="checkClientAccount()">🔍 Buscar mi cuenta</button>
-    
-    <div id="client-account-result"></div>
+
+    <!-- ESTADO: registro -->
+    <div id="account-register-view" style="display:none;">
+      <h2 class="section-title">➕ Crear Cuenta</h2>
+      <p style="font-size:0.85rem; color:var(--muted); margin-bottom:16px;">Llena tus datos para registrarte como cliente.</p>
+      <div class="form-group">
+        <label>👤 Tu Nombre Completo</label>
+        <input type="text" id="reg-name" placeholder="Ej: Juan Pérez">
+      </div>
+      <div class="form-group">
+        <label>📱 Tu Teléfono (WhatsApp)</label>
+        <input type="tel" id="reg-phone" placeholder="Ej: 8091234567">
+      </div>
+      <button class="btn btn-primary w100" style="padding:14px; margin-bottom:12px;" onclick="registerClientAccount()">✅ Crear mi cuenta</button>
+      <button class="btn w100" style="padding:12px; background:var(--surface2); color:var(--text);" onclick="showLoginForm()">← Volver</button>
+      <div id="account-register-msg" style="margin-top:12px;"></div>
+    </div>
+
+    <!-- ESTADO: sesión activa -->
+    <div id="account-dashboard-view" style="display:none;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h2 class="section-title" style="margin:0;">👤 <span id="dash-client-name"></span></h2>
+        <button onclick="logoutClientAccount()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;">Salir 🚪</button>
+      </div>
+
+      <!-- Deuda -->
+      <div id="dash-debt-box" style="border-radius:14px; padding:16px; margin-bottom:16px; text-align:center;"></div>
+
+      <!-- Pedidos recientes -->
+      <h3 style="font-size:0.9rem; color:var(--muted); margin-bottom:10px;">📋 Mis Compras</h3>
+      <div id="dash-sales-list"></div>
+    </div>
   </div>
 
   <nav class="client-nav">
@@ -363,7 +398,8 @@ window.onload = () => {
     
     // Solo mostramos el catálogo inicialmente
     loadFromCloud().then(() => { 
-      renderClientCatalog(); 
+      renderClientCatalog();
+      tryAutoLogin();
     });
   }
 }
@@ -458,6 +494,8 @@ function allProds(){ return [...data.products,...data.recipes]; }
 // ========================= LÓGICA DEL CLIENTE ===============================
 // ============================================================================
 function showClientPage(id, el) {
+  if(id === 'account') { setTimeout(onAccountTabOpen, 50); }
+  if(id === 'cart') { setTimeout(prefillCheckoutIfLogged, 50); }
   document.querySelectorAll('.client-page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.c-nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('client-page-' + id).classList.add('active');
@@ -642,28 +680,166 @@ function startAdminPolling() {
   }, 30000);
 }
 
-function checkClientAccount() {
-  let phone = document.getElementById('client-account-phone').value.trim().replace(/\D/g,'');
-  if(!phone) return alert('Por favor ingresa tu número.');
-  const resultBox = document.getElementById('client-account-result');
-  
-  const client = data.clients.find(c => c.phone && c.phone.replace(/\D/g,'').includes(phone));
-  
-  if(!client) {
-    resultBox.innerHTML = `<div class="debt-card" style="border-color:var(--muted)">No encontramos ninguna cuenta vinculada al número ${phone}. (Asegúrate de haber comprado antes)</div>`;
+// ===== SISTEMA DE CUENTAS DE CLIENTE =====
+let loggedClient = null;
+
+function showLoginForm() {
+  document.getElementById('account-login-view').style.display = '';
+  document.getElementById('account-register-view').style.display = 'none';
+  document.getElementById('account-dashboard-view').style.display = 'none';
+}
+
+function showRegisterForm() {
+  document.getElementById('account-login-view').style.display = 'none';
+  document.getElementById('account-register-view').style.display = '';
+  document.getElementById('account-dashboard-view').style.display = 'none';
+  // Pre-llenar teléfono si lo escribió
+  const phone = document.getElementById('client-account-phone').value.trim();
+  if(phone) document.getElementById('reg-phone').value = phone;
+}
+
+function loginClientAccount() {
+  const phone = document.getElementById('client-account-phone').value.trim().replace(/\D/g,'');
+  if(!phone || phone.length < 7) {
+    document.getElementById('account-login-msg').innerHTML = '<p style="color:var(--accent2)">⚠️ Ingresa un número válido.</p>';
     return;
   }
-  const sales = data.sales.filter(s => s.clientId == client.id && !s.paid);
-  const totalDebt = sales.reduce((s, x) => s + x.total, 0);
+  // Buscar cliente por teléfono
+  const client = data.clients.find(c => c.phone && c.phone.replace(/\D/g,'').includes(phone));
+  if(!client) {
+    document.getElementById('account-login-msg').innerHTML = `
+      <p style="color:var(--accent2)">❌ No encontramos cuenta con ese número.</p>
+      <p style="font-size:0.8rem; color:var(--muted); margin-top:6px;">¿Eres nuevo? Regístrate abajo.</p>`;
+    return;
+  }
+  // Login exitoso
+  loggedClient = client;
+  localStorage.setItem('client_session', JSON.stringify({id: client.id, phone: client.phone}));
+  showClientDashboard();
+}
 
-  if(totalDebt > 0) {
-    let html = `<div class="debt-card"><div style="font-size:1.5rem">🔴</div><h3 style="color:var(--accent2); margin:8px 0;">Balance Pendiente</h3><div style="font-size:2rem; font-weight:800; font-family:'Syne',sans-serif;">${fmt(totalDebt)}</div><p style="font-size:0.85rem; margin-top:12px;">Hola <strong>${client.name}</strong>, tienes facturas pendientes:</p><div style="text-align:left; margin-top:12px; background:#00000033; padding:10px; border-radius:8px;">`;
-    sales.forEach(s => { html += `<div style="display:flex; justify-content:space-between; font-size:0.8rem; border-bottom:1px solid #ffffff11; padding:6px 0;"><span>${s.date.split('T')[0]}</span><span style="font-weight:bold">${fmt(s.total)}</span></div>`; });
-    html += `</div></div>`; resultBox.innerHTML = html;
+function registerClientAccount() {
+  const name = document.getElementById('reg-name').value.trim();
+  const phone = document.getElementById('reg-phone').value.trim().replace(/\D/g,'');
+  const msg = document.getElementById('account-register-msg');
+  
+  if(!name) { msg.innerHTML = '<p style="color:var(--accent2)">⚠️ Ingresa tu nombre.</p>'; return; }
+  if(!phone || phone.length < 7) { msg.innerHTML = '<p style="color:var(--accent2)">⚠️ Ingresa un teléfono válido.</p>'; return; }
+  
+  // Verificar si ya existe con ese teléfono
+  const existing = data.clients.find(c => c.phone && c.phone.replace(/\D/g,'').includes(phone));
+  if(existing) {
+    msg.innerHTML = '<p style="color:var(--accent2)">⚠️ Ya existe una cuenta con ese teléfono. Intenta entrar.</p>';
+    return;
+  }
+  
+  // Verificar si hay un cliente con ese nombre (sin teléfono) para vincularlo
+  const byName = data.clients.find(c => c.name.toLowerCase().trim() === name.toLowerCase().trim() && (!c.phone || c.phone === ''));
+  
+  if(byName) {
+    // Vincular teléfono al cliente existente
+    byName.phone = phone;
+    loggedClient = byName;
   } else {
-    resultBox.innerHTML = `<div class="ok-card"><div style="font-size:2rem">✅</div><h3 style="color:var(--green); margin:8px 0;">¡Estás al día!</h3><p style="font-size:0.9rem;">Hola <strong>${client.name}</strong>, no tienes deudas pendientes.</p></div>`;
+    // Crear cliente nuevo
+    const newClient = { id: newId(), name: name, phone: phone };
+    data.clients.push(newClient);
+    loggedClient = newClient;
+  }
+  
+  save();
+  localStorage.setItem('client_session', JSON.stringify({id: loggedClient.id, phone: loggedClient.phone}));
+  
+  msg.innerHTML = '<p style="color:var(--green)">✅ ¡Cuenta creada!</p>';
+  setTimeout(() => showClientDashboard(), 800);
+}
+
+function showClientDashboard() {
+  if(!loggedClient) return;
+  
+  document.getElementById('account-login-view').style.display = 'none';
+  document.getElementById('account-register-view').style.display = 'none';
+  document.getElementById('account-dashboard-view').style.display = '';
+  document.getElementById('dash-client-name').textContent = loggedClient.name;
+  
+  // Calcular deuda
+  const unpaidSales = data.sales.filter(s => s.clientId == loggedClient.id && !s.paid);
+  const totalDebt = unpaidSales.reduce((s, x) => s + x.total, 0);
+  const debtBox = document.getElementById('dash-debt-box');
+  
+  if(totalDebt > 0) {
+    debtBox.style.background = '#ff6b6b22';
+    debtBox.style.border = '1px solid var(--accent2)';
+    debtBox.innerHTML = `
+      <div style="font-size:1.5rem">🔴</div>
+      <p style="font-size:0.85rem; color:var(--muted); margin:4px 0;">Balance pendiente</p>
+      <div style="font-size:2.2rem; font-weight:800; color:var(--accent2); font-family:'Syne',sans-serif;">${fmt(totalDebt)}</div>
+      <p style="font-size:0.8rem; color:var(--muted); margin-top:6px;">${unpaidSales.length} compra(s) sin pagar</p>`;
+  } else {
+    debtBox.style.background = '#26de8122';
+    debtBox.style.border = '1px solid var(--green)';
+    debtBox.innerHTML = `
+      <div style="font-size:1.5rem">✅</div>
+      <p style="font-size:0.9rem; color:var(--green); margin:6px 0; font-weight:600;">¡Estás al día!</p>
+      <p style="font-size:0.8rem; color:var(--muted);">No tienes deudas pendientes.</p>`;
+  }
+  
+  // Mostrar todas las compras
+  const allSales = data.sales.filter(s => s.clientId == loggedClient.id).sort((a,b) => new Date(b.date)-new Date(a.date));
+  const salesList = document.getElementById('dash-sales-list');
+  
+  if(allSales.length === 0) {
+    salesList.innerHTML = '<p style="color:var(--muted); font-size:0.85rem; text-align:center; padding:20px;">Aún no tienes compras registradas.</p>';
+    return;
+  }
+  
+  salesList.innerHTML = allSales.map(s => {
+    const items = s.items.map(i => `${i.qty}x ${i.name}`).join(', ');
+    const statusColor = s.paid ? 'var(--green)' : 'var(--accent2)';
+    const statusText = s.paid ? '✅ Pagado' : '🔴 Pendiente';
+    return `<div style="background:var(--surface2); border-radius:10px; padding:12px; margin-bottom:8px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:0.75rem; color:var(--muted);">${s.date.split('T')[0]}</span>
+        <span style="font-size:0.75rem; color:${statusColor}; font-weight:600;">${statusText}</span>
+      </div>
+      <div style="font-size:0.82rem; color:var(--muted); margin:4px 0;">${items}</div>
+      <div style="font-size:1rem; font-weight:700; color:var(--accent);">${fmt(s.total)}</div>
+    </div>`;
+  }).join('');
+}
+
+function logoutClientAccount() {
+  loggedClient = null;
+  localStorage.removeItem('client_session');
+  document.getElementById('client-account-phone').value = '';
+  showLoginForm();
+}
+
+// Auto-login si hay sesión guardada
+function tryAutoLogin() {
+  const session = JSON.parse(localStorage.getItem('client_session') || 'null');
+  if(session && session.id) {
+    const client = data.clients.find(c => c.id === session.id);
+    if(client) { loggedClient = client; }
   }
 }
+
+// Llamar tryAutoLogin cuando se abre la pestaña de cuenta
+function onAccountTabOpen() {
+  if(loggedClient) { showClientDashboard(); }
+  else { showLoginForm(); }
+}
+
+// También pre-llenar el select de checkout si el cliente está logueado
+function prefillCheckoutIfLogged() {
+  if(!loggedClient) return;
+  const sel = document.getElementById('client-select-existing');
+  if(!sel) return;
+  const opt = Array.from(sel.options).find(o => o.value == loggedClient.id);
+  if(opt) { sel.value = loggedClient.id; toggleNewClientFields(); }
+}
+
+function checkClientAccount() { loginClientAccount(); }
 
 // ============================================================================
 // ======================= LÓGICA DEL ADMINISTRADOR ===========================
