@@ -306,8 +306,6 @@ function checkAuthName() {
     if(ex) { 
         msg.style.display = 'block'; 
         pl.textContent = ex.pin ? 'Ingresa tu PIN de 4 números' : 'Crea un PIN de 4 números para tu cuenta'; 
-        
-        // Si el cliente ya existe pero le falta el número
         if(!ex.phone || ex.phone.trim() === '') {
             pg.style.display = 'block';
             phl.innerHTML = '⚠️ Faltaba tu número, por favor agrégalo:';
@@ -317,8 +315,6 @@ function checkAuthName() {
     } else { 
         msg.style.display = 'none'; 
         pl.textContent = 'Crea un PIN de 4 números'; 
-        
-        // Si el nombre es nuevo, se le pide el número
         if(n) {
             pg.style.display = 'block';
             phl.innerHTML = 'Tu Teléfono (WhatsApp)';
@@ -332,27 +328,14 @@ function handleAuth() {
     const n = document.getElementById('auth-name').value.trim(), 
           p = document.getElementById('auth-pin').value.trim(),
           ph = document.getElementById('auth-phone').value.trim(); 
-          
     if(!n) return alert('Por favor ingresa tu nombre.'); 
     if(!p || p.length < 4) return alert('Ingresa un PIN de al menos 4 números.'); 
-    
     let c = data.clients.find(x => x.name.toLowerCase() === n.toLowerCase()); 
-    
     if(c) { 
         if(c.pin && c.pin !== p) return alert('PIN incorrecto.'); 
         let updated = false;
-        
-        // Guardar PIN si era la primera vez que entraba
         if(!c.pin) { c.pin = p; updated = true; }
-        
-        // Guardar teléfono si le faltaba y ahora lo escribió
-        if((!c.phone || c.phone.trim() === '') && ph) {
-            c.phone = ph;
-            updated = true;
-        } else if((!c.phone || c.phone.trim() === '') && !ph) {
-             return alert('Por favor ingresa tu número de WhatsApp para continuar.');
-        }
-
+        if((!c.phone || c.phone.trim() === '') && ph) { c.phone = ph; updated = true; } else if((!c.phone || c.phone.trim() === '') && !ph) { return alert('Por favor ingresa tu número de WhatsApp para continuar.'); }
         if(updated) { save(); alert('¡Datos actualizados!'); }
     } else { 
         if(!ph) return alert('Requerimos tu teléfono para crear la cuenta.'); 
@@ -361,14 +344,35 @@ function handleAuth() {
         save(); 
         alert('¡Cuenta creada exitosamente!'); 
     } 
-    
     loggedInClient = c; 
     localStorage.setItem('client_logged_in', JSON.stringify(c)); 
     showClientPage('account', document.getElementById('nav-account')); 
 }
 
 function logoutClient() { loggedInClient = null; localStorage.removeItem('client_logged_in'); document.getElementById('auth-name').value = ''; document.getElementById('auth-phone').value = ''; document.getElementById('auth-pin').value = ''; checkAuthName(); showClientPage('account', document.getElementById('nav-account')); }
-function refreshClientDashboard() { if(!loggedInClient) return; document.getElementById('dash-name').textContent = `Hola, ${loggedInClient.name}`; document.getElementById('dash-phone').textContent = loggedInClient.phone || ''; const res = document.getElementById('client-account-result'), sls = data.sales.filter(s => s.clientId == loggedInClient.id && !s.paid), td = sls.reduce((s, x) => s + x.total, 0); if(td > 0) { let ht = `<div class="debt-card"><div style="font-size:1.5rem">🔴</div><h3 style="color:var(--accent2); margin:8px 0;">Balance Pendiente</h3><div style="font-size:2rem; font-weight:800;">${fmt(td)}</div><p style="font-size:0.85rem; margin-top:12px; font-weight:bold;">Para pagar, realiza una transferencia a:</p><div style="background:#00000033; padding:10px; border-radius:8px; margin-top:8px; text-align:left; font-size:0.9rem;">🏦 <strong>Banco Popular</strong> (Corriente)<br>🔢 Cuenta: <strong>852775865</strong><br>📱 WhatsApp: <strong>809 886 3186</strong></div><div style="text-align:left; margin-top:12px; background:#00000033; padding:10px; border-radius:8px;">`; sls.forEach(s => { ht += `<div style="display:flex; justify-content:space-between; font-size:0.8rem; border-bottom:1px solid #ffffff11; padding:6px 0;"><span>${s.date.split('T')[0]}</span><span style="font-weight:bold">${fmt(s.total)}</span></div>`; }); ht += `</div></div>`; res.innerHTML = ht; } else { res.innerHTML = `<div class="ok-card"><div style="font-size:2rem">✅</div><h3 style="color:var(--green); margin:8px 0;">¡Estás al día!</h3><p style="font-size:0.9rem;">No tienes deudas pendientes.</p></div>`; } const wb = document.getElementById('client-web-orders'), mo = (data.onlineOrders || []).filter(o => o.clientId == loggedInClient.id); if(mo.length > 0) { wb.innerHTML = mo.map(o => `<div class="card" style="padding:12px;"><div class="flex-between" style="font-size:0.8rem; color:var(--muted); margin-bottom:8px;"><span>${dateStr(o.date)}</span><span class="badge badge-yellow">En Local ⏳</span></div><div style="font-size:0.9rem;">${o.items.map(i=>`${i.qty}x ${i.name}`).join(', ')}</div><div class="flex-between mt-10"><span class="fw-bold text-yellow">${fmt(o.total)}</span><span style="font-size:0.8rem">${o.payType}</span></div></div>`).join(''); } else wb.innerHTML = `<p class="text-muted" style="text-align:center; font-size:0.85rem;">No tienes pedidos en preparación.</p>`; }
+
+// === MODIFICACIÓN DE LA VISTA DEL DASHBOARD PARA MOSTRAR DETALLE DE PRODUCTOS ===
+function refreshClientDashboard() { 
+    if(!loggedInClient) return; 
+    document.getElementById('dash-name').textContent = `Hola, ${loggedInClient.name}`; 
+    document.getElementById('dash-phone').textContent = loggedInClient.phone || ''; 
+    const res = document.getElementById('client-account-result'), sls = data.sales.filter(s => s.clientId == loggedInClient.id && !s.paid), td = sls.reduce((s, x) => s + x.total, 0); 
+    if(td > 0) { 
+        let ht = `<div class="debt-card"><div style="font-size:1.5rem">🔴</div><h3 style="color:var(--accent2); margin:8px 0;">Balance Pendiente</h3><div style="font-size:2rem; font-weight:800;">${fmt(td)}</div><p style="font-size:0.85rem; margin-top:12px; font-weight:bold;">Para pagar, realiza una transferencia a:</p><div style="background:#00000033; padding:10px; border-radius:8px; margin-top:8px; text-align:left; font-size:0.9rem;">🏦 <strong>Banco Popular</strong> (Corriente)<br>🔢 Cuenta: <strong>852775865</strong><br>📱 WhatsApp: <strong>809 886 3186</strong></div><div style="text-align:left; margin-top:12px; background:#00000033; padding:10px; border-radius:8px;">`; 
+        sls.forEach(s => { 
+            const it = s.items.map(i=>`• ${i.qty}x ${i.name}`).join('<br>'); 
+            ht += `<div style="font-size:0.85rem; border-bottom:1px solid #ffffff11; padding:10px 0;"><div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span style="color:var(--muted)">📅 ${s.date.split('T')[0]}</span><span style="font-weight:bold; color:var(--accent2);">${fmt(s.total)}</span></div><div style="color:var(--text); font-size:0.8rem; line-height:1.4;">${it}</div></div>`; 
+        }); 
+        ht += `</div></div>`; 
+        res.innerHTML = ht; 
+    } else { 
+        res.innerHTML = `<div class="ok-card"><div style="font-size:2rem">✅</div><h3 style="color:var(--green); margin:8px 0;">¡Estás al día!</h3><p style="font-size:0.9rem;">No tienes deudas pendientes.</p></div>`; 
+    } 
+    const wb = document.getElementById('client-web-orders'), mo = (data.onlineOrders || []).filter(o => o.clientId == loggedInClient.id); 
+    if(mo.length > 0) { 
+        wb.innerHTML = mo.map(o => `<div class="card" style="padding:12px;"><div class="flex-between" style="font-size:0.8rem; color:var(--muted); margin-bottom:8px;"><span>${dateStr(o.date)}</span><span class="badge badge-yellow">En Local ⏳</span></div><div style="font-size:0.9rem;">${o.items.map(i=>`${i.qty}x ${i.name}`).join(', ')}</div><div class="flex-between mt-10"><span class="fw-bold text-yellow">${fmt(o.total)}</span><span style="font-size:0.8rem">${o.payType}</span></div></div>`).join(''); 
+    } else wb.innerHTML = `<p class="text-muted" style="text-align:center; font-size:0.85rem;">No tienes pedidos en preparación.</p>`; 
+}
 
 function renderClientCatalog() { const c = document.getElementById('client-catalog-container'), items = [...(data.recipes || []), ...(data.products || []).filter(p => p.stock > 0)]; if(items.length === 0) { c.innerHTML = `<p style="grid-column:span 2;text-align:center;color:var(--muted);padding:40px 0;">No hay productos.</p>`; return; } c.innerHTML = items.map(i => `<div class="product-card"><div class="emoji">${i.emoji || '📦'}</div><div class="pname">${i.name}</div><div class="pprice">${fmt(i.price)}</div><button class="btn btn-primary" style="margin-top:8px; padding:6px; width:100%; border-radius:6px;" onclick="addToStoreCart(${i.id}, '${i.type || 'simple'}')">+ Añadir</button></div>`).join(''); }
 function addToStoreCart(id, type) { const l = type === 'recipe' ? data.recipes : data.products, i = l.find(x => x.id === id); if(!i) return; const ex = storeCart.find(x => x.id === id && x.type === type); if(ex) ex.qty++; else storeCart.push({ id, type, name: i.name, emoji: i.emoji || '📦', price: i.price, qty: 1 }); updateStoreCartBadge(); alert(`✅ Agregado: ${i.name}`); }
