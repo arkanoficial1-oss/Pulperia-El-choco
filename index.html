@@ -127,26 +127,30 @@
         <p class="text-green" style="font-size:0.85rem; margin-bottom:12px; text-align:center;">✅ Sesión iniciada. Listo para enviar.</p>
         
         <div class="form-group" style="margin-top: 20px;">
-          <label>¿Cómo deseas pagar?</label>
+          <label>Método de pago</label>
           <select id="client-order-payment" onchange="togglePaymentDetails()">
-            <option value="transferencia" selected>🏦 Transferencia Bancaria</option>
-            <option value="credito5">📅 Fiado (Crédito 5 días)</option>
-            <option value="credito">📅 Fiado (Otro plazo)</option>
+            <option value="transferencia" selected>🏦 Transferencia bancaria</option>
+            <option value="credito5">📅 Crédito 5 días</option>
+            <option value="credito">📅 Crédito (otro plazo)</option>
           </select>
         </div>
 
-        <div id="transfer-info" style="background:#45aaf215; border:1px solid #45aaf244; padding:12px; border-radius:8px; margin-bottom:12px; text-align:left;">
-            <p style="font-size:0.85rem; margin-bottom:8px; color:var(--blue); font-weight:bold;">🏦 Datos para la Transferencia:</p>
-            <div style="font-size:0.9rem; line-height:1.5;">Banco Popular (Corriente)<br>Cuenta: <strong>852775865</strong></div>
-            <div class="form-group" style="margin-top:12px; border-top:1px solid #45aaf244; padding-top:12px;">
-                <label style="color:var(--text); font-weight:bold;">📸 Sube tu comprobante (Recomendado)</label>
-                <input type="file" id="client-receipt" accept="image/*" style="background:var(--surface); padding:8px; border-color:var(--blue);">
+        <div id="transfer-info" style="background:#45aaf215; border:1px solid #45aaf244; padding:16px; border-radius:12px; margin-bottom:12px; text-align:left;">
+            <p style="font-size:0.9rem; margin-bottom:8px; color:var(--blue); font-weight:bold;">🏦 Datos para Transferencia:</p>
+            <div style="font-size:0.95rem; line-height:1.5; margin-bottom:12px;">Banco Popular (Corriente)<br>Cuenta: <strong style="font-size:1.1rem; color:#fff;">852775865</strong></div>
+            
+            <div style="border-top:1px solid #45aaf244; padding-top:12px;">
+                <label style="color:var(--text); font-weight:bold; font-size:0.85rem; margin-bottom:8px;">1️⃣ Opción A: Sube el comprobante aquí</label>
+                <input type="file" id="client-receipt" accept="image/*" style="background:var(--surface); padding:8px; border-color:var(--blue); margin-bottom:16px; width:100%;">
+                
+                <label style="color:var(--text); font-weight:bold; font-size:0.85rem; margin-bottom:8px;">2️⃣ Opción B: Envíalo directo por WhatsApp</label>
+                <a href="https://wa.me/18098863186?text=Hola,%20aquí%20está%20el%20comprobante%20de%20mi%20pedido%20de%20la%20tienda%20virtual." target="_blank" class="btn btn-whatsapp w100" style="text-decoration:none; padding:12px; font-size:1rem; border-radius:8px;">📲 Enviar por WhatsApp</a>
             </div>
         </div>
 
-        <div id="client-credito-days-wrap" class="form-group" style="display:none; margin-bottom:12px;">
-            <label style="color:var(--accent); font-weight:bold;">¿Cuántos días de crédito necesitas?</label>
-            <input type="number" id="client-credit-days" value="15" min="1" max="60">
+        <div id="client-credito-days-wrap" class="form-group" style="display:none; margin-bottom:16px; background:var(--surface2); padding:16px; border-radius:12px; border:1px solid var(--accent); text-align:center;">
+            <label style="color:var(--accent); font-weight:bold; font-size:0.9rem;">Días de crédito que necesitas</label>
+            <input type="number" id="client-credit-days" value="1" min="1" max="60" style="margin-top:8px; font-size:1.2rem; font-weight:bold; text-align:center; width:100%; border:2px solid var(--accent);">
         </div>
 
         <button id="checkout-btn" class="btn btn-primary w100" style="padding:16px; font-size:1.1rem; border-radius:12px; margin-top:10px;" onclick="sendWebOrder()">✅ Enviar Pedido al Local</button>
@@ -182,7 +186,7 @@
       <div>
         <div class="form-group"><label>Cliente</label><select id="admin-pos-client"><option value="">— Al contado (sin cliente) —</option></select></div>
         <div class="form-group"><label>Método de pago</label><select id="admin-pos-payment"><option value="inmediato">💵 Efectivo inmediato</option><option value="transferencia">🏦 Transferencia bancaria</option><option value="credito5">📅 Crédito 5 días</option><option value="credito">📅 Crédito (otro plazo)</option></select></div>
-        <div id="admin-credito-days-wrap" style="display:none" class="form-group"><label>Días de crédito</label><input type="number" id="admin-pos-credit-days" value="5" min="1" max="60"></div>
+        <div id="admin-credito-days-wrap" style="display:none" class="form-group"><label>Días de crédito</label><input type="number" id="admin-pos-credit-days" value="1" min="1" max="60"></div>
         <div class="sub-section">Productos en venta</div><div class="product-grid" id="admin-pos-products"></div>
       </div>
       <div>
@@ -263,7 +267,7 @@
                 <option value="credito">📅 Fiado (otro)</option>
             </select>
         </div>
-        <div id="aw-credit-wrap" class="form-group" style="display:none;"><label>Días de crédito</label><input type="number" id="aw-credit-days" value="15"></div>
+        <div id="aw-credit-wrap" class="form-group" style="display:none;"><label>Días de crédito</label><input type="number" id="aw-credit-days" value="1"></div>
         <input type="hidden" id="aw-order-id">
         <button class="btn btn-success w100 mt-10" onclick="confirmWebOrder()">✅ Cobrar y Registrar</button>
     </div>
@@ -416,7 +420,7 @@ async function sendWebOrder() {
     
     let cd = 0;
     if(pt === 'credito5') cd = 5;
-    if(pt === 'credito') cd = parseInt(document.getElementById('client-credit-days').value) || 15;
+    if(pt === 'credito') cd = parseInt(document.getElementById('client-credit-days').value) || 1;
 
     b.textContent = "⏳ Enviando..."; b.disabled = true; 
     
@@ -474,7 +478,7 @@ function clearPosCart(){posCart=[];renderPosCart();}
 function renderPosCart(){ const w=document.getElementById('admin-cart-items'); if(!posCart.length){w.innerHTML='<p class="text-muted" style="padding:16px 0;text-align:center;">Toca un producto →</p>'; document.getElementById('admin-cart-subtotal').textContent='RD$0.00'; document.getElementById('admin-cart-total').textContent='RD$0.00'; return;} w.innerHTML=posCart.map((i,idx)=>`<div class="cart-item"><span style="font-size:1.2rem">${i.emoji}</span><span style="flex:1;font-size:.875rem">${i.name}</span><div class="cart-qty"><button class="qty-btn" onclick="updatePosCartQty(${idx},-1)">−</button><span>${i.qty}</span><button class="qty-btn" onclick="updatePosCartQty(${idx},+1)">+</button></div><span class="text-yellow" style="min-width:68px;text-align:right;font-size:.85rem">${fmt(i.price*i.qty)}</span></div>`).join(''); const t=posCart.reduce((s,i)=>s+i.price*i.qty,0); document.getElementById('admin-cart-subtotal').textContent=fmt(t); document.getElementById('admin-cart-total').textContent=fmt(t); }
 function completePosSale(){ if(!posCart.length) return alert('Vacío'); const pt=document.getElementById('admin-pos-payment').value; let cd=0, dd=null; if(pt==='credito5') cd=5; if(pt==='credito') cd=parseInt(document.getElementById('admin-pos-credit-days').value)||5; if(cd>0){ const d=new Date(); d.setDate(d.getDate()+cd); dd=d.toISOString().split('T')[0]; } const rId=document.getElementById('admin-pos-client').value, cId=rId?parseInt(rId):null, c=cId?data.clients.find(x=>x.id===cId):null, t=posCart.reduce((s,i)=>s+i.price*i.qty,0), s={id:newId(),date:new Date().toISOString(), clientId: cId, clientName: c?c.name:'Al Contado', items:posCart.map(i=>({...i})),total:t,payType:pt,creditDays:cd,dueDate:dd, paid:pt==='inmediato'||pt==='transferencia'}; s.items.forEach(i=>{ if(i.type!=='recipe'){const p=data.products.find(x=>x.id==i.id);if(p) p.stock=Math.max(0,p.stock-i.qty);} }); data.sales.push(s); save(); posCart=[]; renderPosCart(); updateAlertBadge(); alert(`✅ Venta a ${s.clientName}\nTotal: ${fmt(t)}`); }
 
-// ADMIN WEB ORDERS (MODIFICADO PARA MOSTRAR DÍAS Y COMPROBANTE)
+// ADMIN WEB ORDERS
 function renderWebOrders() { 
     const tb = document.getElementById('weborders-body'), bd = document.getElementById('web-badge'), o = data.onlineOrders || []; 
     bd.textContent = o.length; bd.style.display = o.length > 0 ? 'inline' : 'none'; 
@@ -509,7 +513,7 @@ function openApproveWeb(id) {
     if(o.clientId) s.value = o.clientId; 
     
     document.getElementById('aw-payment').value = o.payType || 'transferencia'; 
-    document.getElementById('aw-credit-days').value = o.creditDays || 15;
+    document.getElementById('aw-credit-days').value = o.creditDays || 1;
     document.getElementById('aw-credit-wrap').style.display = (o.payType === 'credito') ? 'block' : 'none';
 
     openModal('modal-approve-web'); 
@@ -521,7 +525,7 @@ function confirmWebOrder() {
     
     let cd = 0, dd = null;
     if(pt === 'credito5') cd = 5;
-    if(pt === 'credito') cd = parseInt(document.getElementById('aw-credit-days').value) || 15;
+    if(pt === 'credito') cd = parseInt(document.getElementById('aw-credit-days').value) || 1;
     if(cd > 0) { const d = new Date(); d.setDate(d.getDate() + cd); dd = d.toISOString().split('T')[0]; }
 
     const s = { id: newId(), date: new Date().toISOString(), clientId: cId, clientName: cName, items: o.items, total: o.total, payType: pt, creditDays: cd, dueDate: dd, paid: pt !== 'credito5' && pt !== 'credito' }; 
