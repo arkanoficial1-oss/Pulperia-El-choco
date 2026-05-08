@@ -161,7 +161,12 @@
         </select>
       </div>
       
-      <button id="checkout-btn" class="btn btn-primary w100" style="padding:16px; font-size:1.1rem; border-radius:12px; margin-top:10px;" onclick="sendWebOrder()">✅ Enviar Pedido al Local</button>
+      <div id="checkout-login-warning" style="display:none; background:#f7b73122; border:2px solid var(--accent); border-radius:12px; padding:16px; text-align:center; margin-top:10px;">
+        <p style="font-size:0.95rem; font-weight:700; color:var(--accent); margin-bottom:8px;">👤 Debes entrar a tu cuenta primero</p>
+        <p style="font-size:0.82rem; color:var(--muted); margin-bottom:12px;">Para enviar tu pedido necesitas estar identificado.</p>
+        <button onclick="goToAccountFromCart()" class="btn btn-primary w100" style="padding:12px; border-radius:10px;">Entrar / Crear cuenta →</button>
+      </div>
+      <button id="checkout-btn" class="btn btn-primary w100" style="padding:16px; font-size:1.1rem; border-radius:12px; margin-top:10px; display:none;" onclick="sendWebOrder()">✅ Enviar Pedido al Local</button>
     </div>
   </div>
 
@@ -237,9 +242,14 @@
             <p style="font-size:0.75rem; color:var(--muted); margin-bottom:2px;">¡Hola!</p>
             <h2 id="dash-client-name" style="font-family:'Syne',sans-serif; font-size:1.4rem; font-weight:800; color:var(--text); margin:0;"></h2>
           </div>
-          <button onclick="logoutClientAccount()" style="background:var(--surface2); border:1px solid var(--border); color:var(--muted); cursor:pointer; border-radius:8px; padding:6px 12px; font-size:0.8rem;">
-            Salir 🚪
-          </button>
+    <div style="display:flex; gap:8px;">
+            <button onclick="sendWhatsAppToClient(loggedClient)" style="background:#25D366; border:none; color:#fff; cursor:pointer; border-radius:8px; padding:6px 12px; font-size:0.8rem; font-weight:600;">
+              📲 WhatsApp
+            </button>
+            <button onclick="logoutClientAccount()" style="background:var(--surface2); border:1px solid var(--border); color:var(--muted); cursor:pointer; border-radius:8px; padding:6px 12px; font-size:0.8rem;">
+              Salir 🚪
+            </button>
+          </div>
         </div>
       </div>
 
@@ -339,7 +349,8 @@
   </div>
 
   <div id="admin-page-clients" class="admin-page">
-    <div class="flex-between mb-16"><h2 class="section-title" style="margin:0">👥 Clientes</h2><button class="btn btn-primary" onclick="openClientModal()">+ Nuevo Cliente</button></div>
+    <div class="flex-between mb-16"><h2 class="section-title" style="margin:0">👥 Clientes</h2>
+      <button onclick="sendWhatsAppToAll()" style="background:#25D366; color:#fff; border:none; border-radius:10px; padding:10px 20px; font-size:0.9rem; font-weight:700; cursor:pointer; margin-bottom:16px; display:flex; align-items:center; gap:8px;">📲 Enviar estado de cuenta a TODOS por WhatsApp</button><button class="btn btn-primary" onclick="openClientModal()">+ Nuevo Cliente</button></div>
     <div id="clients-grid" class="grid2"></div>
   </div>
 
@@ -783,6 +794,11 @@ function confirmClientLogin() {
   loggedClient = selectedClientForLogin;
   localStorage.setItem('client_session', JSON.stringify({id: loggedClient.id}));
   showClientDashboard();
+  // Si venía del carrito, regresar
+  if(localStorage.getItem('cart_return')) {
+    localStorage.removeItem('cart_return');
+    setTimeout(() => showClientPage('cart', document.querySelectorAll('.c-nav-item')[1]), 1000);
+  }
 }
 
 // Validar formulario de registro en tiempo real
@@ -860,8 +876,16 @@ function registerClientAccount() {
   
   save();
   localStorage.setItem('client_session', JSON.stringify({id: loggedClient.id}));
-  msg.innerHTML = '<p style="color:var(--green)">✅ ¡Cuenta creada!</p>';
-  setTimeout(() => showClientDashboard(), 700);
+  msg.innerHTML = '<p style="color:var(--green)">✅ ¡Cuenta creada! Enviando info por WhatsApp...</p>';
+  setTimeout(() => {
+    sendWhatsAppOnRegister(loggedClient);
+    showClientDashboard();
+    // Si venía del carrito, regresar al carrito
+    if(localStorage.getItem('cart_return')) {
+      localStorage.removeItem('cart_return');
+      setTimeout(() => showClientPage('cart', document.querySelectorAll('.c-nav-item')[1]), 800);
+    }
+  }, 800);
 }
 
 function showClientDashboard() {
@@ -924,6 +948,83 @@ function showClientDashboard() {
       <div style="font-size:1rem; font-weight:700; color:var(--accent);">${fmt(s.total)}</div>
     </div>`;
   }).join('');
+}
+
+function goToAccountFromCart() {
+  // Guardar que venía del carrito para regresar después
+  localStorage.setItem('cart_return', '1');
+  showClientPage('account', document.querySelectorAll('.c-nav-item')[2]);
+  onAccountTabOpen();
+}
+
+// Número del negocio y cuenta bancaria
+const BUSINESS_PHONE = '18098863186';
+const BUSINESS_BANK = 'Banco Popular — Cuenta Corriente #852775865';
+
+function sendWhatsAppToClient(client) {
+  if(!client || !client.phone) return;
+  const phone = client.phone.replace(/\D/g,'');
+  if(phone.length < 7) return;
+  const fullPhone = phone.startsWith('1') ? phone : '1' + phone;
+  
+  const unpaid = data.sales.filter(s => s.clientId == client.id && !s.paid);
+  const totalDebt = unpaid.reduce((s,x) => s + x.total, 0);
+  
+  let msg = `Hola *${client.name}* 👋\n\n`;
+  if(totalDebt > 0) {
+    msg += `🔴 Tu balance pendiente en *La Pulpería El Choco* es:\n`;
+    msg += `*RD$${totalDebt.toLocaleString('es-DO', {minimumFractionDigits:2})}*\n\n`;
+    msg += `📋 Detalle:\n`;
+    unpaid.forEach(s => {
+      msg += `• ${s.date.split('T')[0]} — RD$${s.total.toLocaleString('es-DO', {minimumFractionDigits:2})}\n`;
+    });
+    msg += `\n💳 Puedes pagar por transferencia:\n*${BUSINESS_BANK}*\n`;
+  } else {
+    msg += `✅ Estás *al día* con nosotros. ¡Gracias!\n`;
+  }
+  msg += `\nCualquier duda escríbenos al: *${BUSINESS_PHONE}*`;
+  
+  const url = `https://wa.me/${fullPhone}?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
+}
+
+function sendWhatsAppToAll() {
+  const clients = data.clients.filter(c => c.phone && c.phone.replace(/\D/g,'').length >= 7);
+  if(clients.length === 0) { alert('No hay clientes con teléfono registrado.'); return; }
+  if(!confirm(\`¿Enviar estado de cuenta a \${clients.length} cliente(s) con WhatsApp?\`)) return;
+  
+  let i = 0;
+  function sendNext() {
+    if(i >= clients.length) { alert('✅ Se abrieron todos los chats. Revisa las pestañas.'); return; }
+    sendWhatsAppToClient(clients[i]);
+    i++;
+    setTimeout(sendNext, 1500);
+  }
+  sendNext();
+}
+
+function sendWhatsAppOnRegister(client) {
+  if(!client || !client.phone) return;
+  const phone = client.phone.replace(/\D/g,'');
+  if(phone.length < 7) return;
+  const fullPhone = phone.startsWith('1') ? phone : '1' + phone;
+  
+  const unpaid = data.sales.filter(s => s.clientId == client.id && !s.paid);
+  const totalDebt = unpaid.reduce((s,x) => s + x.total, 0);
+  
+  let msg = `¡Hola *${client.name}*! 👋 Bienvenido a *La Pulpería El Choco* 🏪\n\n`;
+  msg += `Tu cuenta ha sido creada exitosamente.\n\n`;
+  
+  if(totalDebt > 0) {
+    msg += `🔴 Tienes un balance pendiente de *RD$${totalDebt.toLocaleString('es-DO', {minimumFractionDigits:2})}*\n\n`;
+    msg += `💳 Para pagar por transferencia:\n*${BUSINESS_BANK}*\n\n`;
+  } else {
+    msg += `✅ No tienes deudas pendientes. ¡Gracias!\n\n`;
+  }
+  msg += `Puedes ver tu cuenta en cualquier momento desde la tienda.`;
+  
+  const url = `https://wa.me/${fullPhone}?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
 }
 
 function logoutClientAccount() {
