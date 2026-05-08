@@ -112,7 +112,50 @@
     <div id="client-cloud-status" class="cloud-status" style="background:transparent; padding:0;">🔄 Conectando...</div>
   </header>
 
-  <div id="client-page-catalog" class="client-page active">
+  <div id="client-page-account" class="client-page active">
+    
+    <div id="client-auth-view">
+      <h2 class="section-title">👤 Crear Cuenta o Entrar</h2>
+      <p style="font-size:0.85rem; color:var(--muted); margin-bottom:20px;">Escribe tu nombre. Si ya compraste antes, te encontraremos. Usa un PIN fácil de recordar.</p>
+      
+      <div class="form-group">
+        <label>Nombre Completo</label>
+        <input type="text" id="auth-name" list="client-names-list" placeholder="Ej: Juan Pérez" autocomplete="off" oninput="checkAuthName()">
+        <datalist id="client-names-list"></datalist>
+        <div id="auth-name-msg" style="font-size:0.75rem; color:var(--green); margin-top:4px; display:none;">✅ Cliente encontrado. ¡Ingresa tu PIN!</div>
+      </div>
+      
+      <div class="form-group" id="auth-phone-group" style="display:none;">
+        <label>Tu Teléfono (WhatsApp)</label>
+        <input type="tel" id="auth-phone" placeholder="Ej: 18091234567">
+      </div>
+
+      <div class="form-group">
+        <label id="auth-pin-label">Crea un PIN de 4 números</label>
+        <input type="password" id="auth-pin" placeholder="****" maxlength="4" pattern="\d*">
+      </div>
+      
+      <button class="btn btn-primary w100" style="padding:14px; margin-top:10px;" onclick="handleAuth()">🔐 Entrar a mi cuenta</button>
+    </div>
+
+    <div id="client-dashboard-view" style="display:none;">
+      <div class="card" style="text-align:center;">
+        <div style="font-size:2rem; margin-bottom:8px;">👋</div>
+        <h2 id="dash-name" style="color:var(--accent); margin-bottom:4px;">Hola</h2>
+        <p id="dash-phone" class="text-muted" style="font-size:0.85rem; margin-bottom:16px;"></p>
+        <button class="btn btn-ghost btn-sm" onclick="logoutClient()">Cerrar Sesión</button>
+      </div>
+
+      <h2 class="section-title mt-10">💰 Mi Estado de Cuenta</h2>
+      <div id="client-account-result">Cargando...</div>
+
+      <h2 class="section-title" style="margin-top:24px;">📦 Mis Pedidos Web Pendientes</h2>
+      <div id="client-web-orders"></div>
+    </div>
+
+  </div>
+
+  <div id="client-page-catalog" class="client-page">
     <div class="flex-between mb-16">
       <span class="text-muted" style="font-size:0.9rem;">Nuestros Productos y Promociones</span>
     </div>
@@ -129,147 +172,31 @@
         <div id="client-cart-total" style="font-family:'Syne',sans-serif; font-size:2rem; color:var(--accent); font-weight:800;">RD$0.00</div>
       </div>
       
-      <p class="text-muted" style="font-size:0.85rem; margin-bottom:12px;">Ingresa tus datos para enviar el pedido al negocio:</p>
-      
-      <div class="form-group">
-        <label style="font-size:.85rem; color:var(--accent); font-weight:600;">👇 ¿Ya eres cliente? ¡Selecciónate aquí!</label>
-        <div style="position:relative;">
-          <select id="client-select-existing" onchange="toggleNewClientFields()" style="border:2px solid var(--accent); padding-right:36px; font-weight:500; cursor:pointer;">
-            <option value="NEW">➕ Soy cliente nuevo / No estoy en la lista</option>
+      <div id="cart-auth-warning" class="card" style="border-color:var(--accent2); text-align:center;">
+        <p style="margin-bottom:12px; font-size:.9rem;">Debes iniciar sesión para poder enviar tu pedido al local.</p>
+        <button class="btn btn-primary" onclick="showClientPage('account', document.getElementById('nav-account'))">👤 Ir a Mi Cuenta</button>
+      </div>
+
+      <div id="cart-checkout-form" style="display:none;">
+        <p class="text-green" style="font-size:0.85rem; margin-bottom:12px; text-align:center;">✅ Sesión iniciada. Listo para enviar.</p>
+        <div class="form-group" style="margin-top: 20px;">
+          <label>¿Cómo deseas pagar?</label>
+          <select id="client-order-payment">
+            <option value="inmediato">💵 Efectivo (al entregar)</option>
+            <option value="transferencia">🏦 Transferencia Bancaria</option>
+            <option value="credito5">📅 Anotar en mi cuenta (Fiado)</option>
           </select>
         </div>
-        <p style="font-size:.75rem; color:var(--muted); margin-top:5px;">👆 Toca el recuadro de arriba y busca tu nombre en la lista.</p>
+        <button id="checkout-btn" class="btn btn-primary w100" style="padding:16px; font-size:1.1rem; border-radius:12px; margin-top:10px;" onclick="sendWebOrder()">✅ Enviar Pedido al Local</button>
       </div>
 
-      <div id="new-client-fields">
-        <div class="form-group">
-          <label>Tu Nombre Completo</label>
-          <input type="text" id="client-order-name" placeholder="Ej: Juan Pérez">
-        </div>
-        <div class="form-group">
-          <label>Tu Teléfono (WhatsApp)</label>
-          <input type="tel" id="client-order-phone" placeholder="Ej: 18091234567">
-        </div>
-      </div>
-
-      <div class="form-group" style="margin-top: 20px;">
-        <label>¿Cómo deseas pagar?</label>
-        <select id="client-order-payment">
-          <option value="inmediato">💵 Efectivo (al entregar)</option>
-          <option value="transferencia">🏦 Transferencia Bancaria</option>
-          <option value="credito5">📅 Anotar en mi cuenta (Fiado)</option>
-        </select>
-      </div>
-      
-      <button id="checkout-btn" class="btn btn-primary w100" style="padding:16px; font-size:1.1rem; border-radius:12px; margin-top:10px;" onclick="sendWebOrder()">✅ Enviar Pedido al Local</button>
     </div>
-  </div>
-
-  <div id="client-page-account" class="client-page" style="padding:0; overflow:hidden;">
-
-    <!-- PANTALLA 1: Bienvenida animada -->
-    <div id="acc-welcome" style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:80vh; padding:24px; text-align:center; animation: fadeIn .5s ease;">
-      <div style="font-size:4rem; margin-bottom:12px; animation: bounceIn .6s ease;">👋</div>
-      <h2 style="font-family:'Syne',sans-serif; font-size:1.6rem; font-weight:800; margin-bottom:8px; color:var(--text);">¡Bienvenido!</h2>
-      <p style="color:var(--muted); font-size:0.95rem; margin-bottom:32px; line-height:1.5;">Aquí puedes ver tus pedidos,<br>tus deudas y todo tu historial.</p>
-      <button onclick="accShow('acc-hasaccount')" class="btn btn-primary w100" style="padding:16px; font-size:1.05rem; border-radius:14px; margin-bottom:12px;">
-        ✅ Sí, ya tengo cuenta
-      </button>
-      <button onclick="accShow('acc-register')" style="width:100%; padding:14px; font-size:1rem; border-radius:14px; background:var(--surface2); color:var(--text); border:none; cursor:pointer;">
-        ➕ Soy nuevo, quiero registrarme
-      </button>
-    </div>
-
-    <!-- PANTALLA 2: Buscar cuenta por nombre -->
-    <div id="acc-hasaccount" style="display:none; padding:24px; animation: slideIn .3s ease;">
-      <button onclick="accShow('acc-welcome')" style="background:none;border:none;color:var(--muted);cursor:pointer;margin-bottom:16px;font-size:0.9rem;">← Volver</button>
-      <h2 style="font-family:'Syne',sans-serif; font-size:1.4rem; font-weight:800; margin-bottom:6px;">Busca tu nombre</h2>
-      <p style="color:var(--muted); font-size:0.85rem; margin-bottom:20px;">Escribe tu nombre y selecciónate de la lista.</p>
-      <div class="form-group" style="position:relative;">
-        <label style="color:var(--accent); font-weight:600; font-size:0.85rem;">👤 Tu nombre</label>
-        <input type="text" id="acc-search-name" placeholder="Ej: Juan Pérez" autocomplete="off"
-          oninput="searchClientByName(this.value)"
-          style="border:2px solid var(--accent); font-size:1rem; padding:14px; border-radius:12px;">
-        <div id="acc-search-results" style="position:absolute; left:0; right:0; background:var(--surface2); border-radius:12px; border:1px solid var(--border); max-height:200px; overflow-y:auto; z-index:99; margin-top:4px; display:none;"></div>
-      </div>
-
-      <!-- Confirmación de cliente seleccionado -->
-      <div id="acc-selected-client" style="display:none; background:var(--surface2); border-radius:14px; padding:16px; margin-top:12px; border:2px solid var(--accent);">
-        <p style="font-size:0.8rem; color:var(--muted); margin-bottom:4px;">Cliente seleccionado:</p>
-        <p id="acc-selected-name" style="font-size:1.1rem; font-weight:700; color:var(--text); margin-bottom:12px;"></p>
-        <button id="acc-confirm-btn" onclick="confirmClientLogin()" class="btn btn-primary w100" style="padding:13px; border-radius:12px;">
-          ✅ Entrar a mi cuenta
-        </button>
-      </div>
-      <div id="acc-hasaccount-msg" style="margin-top:12px; font-size:0.85rem;"></div>
-    </div>
-
-    <!-- PANTALLA 3: Registro nuevo -->
-    <div id="acc-register" style="display:none; padding:24px; animation: slideIn .3s ease;">
-      <button onclick="accShow('acc-welcome')" style="background:none;border:none;color:var(--muted);cursor:pointer;margin-bottom:16px;font-size:0.9rem;">← Volver</button>
-      <h2 style="font-family:'Syne',sans-serif; font-size:1.4rem; font-weight:800; margin-bottom:6px;">Crear cuenta</h2>
-      <p style="color:var(--muted); font-size:0.85rem; margin-bottom:20px;">Llena tus datos para registrarte.</p>
-
-      <div class="form-group">
-        <label style="color:var(--accent); font-weight:600; font-size:0.85rem;">👤 Tu nombre completo</label>
-        <input type="text" id="reg-name" placeholder="Ej: Juan Pérez" style="font-size:1rem; padding:14px; border-radius:12px;">
-        <!-- Sugerencias de coincidencia -->
-        <div id="reg-name-match" style="margin-top:8px; display:none;"></div>
-      </div>
-      <div class="form-group">
-        <label style="color:var(--accent); font-weight:600; font-size:0.85rem;">📱 Tu teléfono (WhatsApp)</label>
-        <input type="tel" id="reg-phone" placeholder="Ej: 8091234567" style="font-size:1rem; padding:14px; border-radius:12px;">
-      </div>
-
-      <div id="acc-register-msg" style="margin-bottom:12px; font-size:0.85rem;"></div>
-
-      <button id="acc-register-btn" onclick="registerClientAccount()" class="btn btn-primary w100" style="padding:14px; border-radius:12px; font-size:1rem; opacity:0.5; cursor:not-allowed;" disabled>
-        ✅ Crear mi cuenta
-      </button>
-    </div>
-
-    <!-- PANTALLA 4: Dashboard del cliente -->
-    <div id="acc-dashboard" style="display:none; animation: fadeIn .4s ease;">
-      <!-- Header -->
-      <div style="background:linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%); padding:20px 20px 16px; border-bottom:1px solid var(--border);">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-          <div>
-            <p style="font-size:0.75rem; color:var(--muted); margin-bottom:2px;">¡Hola!</p>
-            <h2 id="dash-client-name" style="font-family:'Syne',sans-serif; font-size:1.4rem; font-weight:800; color:var(--text); margin:0;"></h2>
-          </div>
-    <div style="display:flex; gap:8px;">
-            <button onclick="sendWhatsAppToClient(loggedClient)" style="background:#25D366; border:none; color:#fff; cursor:pointer; border-radius:8px; padding:6px 12px; font-size:0.8rem; font-weight:600;">
-              📲 WhatsApp
-            </button>
-            <button onclick="logoutClientAccount()" style="background:var(--surface2); border:1px solid var(--border); color:var(--muted); cursor:pointer; border-radius:8px; padding:6px 12px; font-size:0.8rem;">
-              Salir 🚪
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div style="padding:16px; overflow-y:auto; max-height:calc(100vh - 180px);">
-        <!-- Caja de deuda -->
-        <div id="dash-debt-box" style="border-radius:16px; padding:20px; margin-bottom:16px; text-align:center;"></div>
-
-        <!-- Pedido activo (si tiene) -->
-        <div id="dash-active-order" style="display:none; background:var(--surface2); border-radius:14px; padding:16px; margin-bottom:16px; border-left:4px solid var(--accent);">
-          <p style="font-size:0.8rem; color:var(--accent); font-weight:600; margin-bottom:8px;">⏳ PEDIDO EN PROCESO</p>
-          <div id="dash-active-order-detail"></div>
-        </div>
-
-        <!-- Historial -->
-        <h3 style="font-size:0.85rem; color:var(--muted); margin-bottom:10px; font-weight:600; text-transform:uppercase; letter-spacing:1px;">📋 Mis Compras</h3>
-        <div id="dash-sales-list"></div>
-      </div>
-    </div>
-
   </div>
 
   <nav class="client-nav">
-    <button class="c-nav-item active" onclick="showClientPage('catalog', this)"><div class="icon">🏠</div>Catálogo</button>
+    <button id="nav-account" class="c-nav-item active" onclick="showClientPage('account', this)"><div class="icon">👤</div>Mi Cuenta</button>
+    <button class="c-nav-item" onclick="showClientPage('catalog', this)"><div class="icon">🏠</div>Catálogo</button>
     <button class="c-nav-item" onclick="showClientPage('cart', this)"><div class="icon">🛒<span id="client-cart-badge" class="c-cart-badge">0</span></div>Mi Pedido</button>
-    <button class="c-nav-item" onclick="showClientPage('account', this)"><div class="icon">👤</div>Mi Cuenta</button>
   </nav>
 </div>
 
@@ -344,8 +271,13 @@
   </div>
 
   <div id="admin-page-clients" class="admin-page">
-    <div class="flex-between mb-16"><h2 class="section-title" style="margin:0">👥 Clientes</h2>
-      <button onclick="sendWhatsAppToAll()" style="background:#25D366; color:#fff; border:none; border-radius:10px; padding:10px 20px; font-size:0.9rem; font-weight:700; cursor:pointer; margin-bottom:16px; display:flex; align-items:center; gap:8px;">📲 Enviar estado de cuenta a TODOS por WhatsApp</button><button class="btn btn-primary" onclick="openClientModal()">+ Nuevo Cliente</button></div>
+    <div class="flex-between mb-16">
+      <h2 class="section-title" style="margin:0">👥 Clientes</h2>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-whatsapp" onclick="bulkWhatsAppReminders()">📢 Cobrar a Todos (WhatsApp)</button>
+        <button class="btn btn-primary" onclick="openClientModal()">+ Nuevo Cliente</button>
+      </div>
+    </div>
     <div id="clients-grid" class="grid2"></div>
   </div>
 
@@ -398,7 +330,7 @@
   <div class="modal-overlay" id="modal-product"><div class="modal"><div class="modal-header"><div class="modal-title" id="mp-title">Producto</div><button class="close-btn" onclick="closeModal('modal-product')">×</button></div><div class="form-group"><label>Nombre</label><input id="p-name"></div><div class="form-group"><label>Emoji</label><input id="p-emoji" maxlength="4"></div><div class="form-group"><label>Categoría</label><select id="p-cat"><option>Bebidas</option><option>Snacks</option><option>Comida</option><option>Dulces</option><option>Otro</option></select></div><div class="grid2"><div class="form-group"><label>Precio Venta</label><input type="number" id="p-price"></div><div class="form-group"><label>Costo</label><input type="number" id="p-cost"></div></div><div class="form-group"><label>Stock</label><input type="number" id="p-stock"></div><input type="hidden" id="p-edit-id"><button class="btn btn-primary w100" onclick="saveProduct()">Guardar</button></div></div>
   <div class="modal-overlay" id="modal-recipe"><div class="modal"><div class="modal-header"><div class="modal-title" id="mr-title">Receta</div><button class="close-btn" onclick="closeModal('modal-recipe')">×</button></div><div class="form-group"><label>Nombre</label><input id="r-name"></div><div class="form-group"><label>Emoji</label><input id="r-emoji" maxlength="4"></div><div class="form-group"><label>Precio Venta</label><input type="number" id="r-price"></div><div style="display:grid;grid-template-columns:1fr 70px 90px 28px;gap:6px;margin-bottom:6px"><span class="text-muted" style="font-size:.7rem">Ingrediente</span><span class="text-muted" style="font-size:.7rem">Cant.</span><span class="text-muted" style="font-size:.7rem">Costo</span><span></span></div><div id="recipe-ingredients"></div><button class="btn btn-ghost btn-sm mt-10" onclick="addIngredientRow()">+ Ingrediente</button><hr><div class="flex-between mb-8"><span class="text-muted">Costo total:</span><span class="fw-bold text-red" id="recipe-cost-disp">RD$0.00</span></div><div class="flex-between mb-8"><span class="text-muted">Ganancia:</span><span class="fw-bold text-green" id="recipe-profit-disp">RD$0.00</span></div><input type="hidden" id="r-edit-id"><button class="btn btn-primary w100 mt-10" onclick="saveRecipe()">Guardar</button></div></div>
   <div class="modal-overlay" id="modal-purchase"><div class="modal"><div class="modal-header"><div class="modal-title">Compra</div><button class="close-btn" onclick="closeModal('modal-purchase')">×</button></div><div class="form-group"><label>Artículo</label><input id="pu-item"></div><div class="form-group"><label>Categoría</label><select id="pu-cat"><option value="">Ninguna</option><option>Ingrediente</option><option>Bebidas</option><option>Snacks</option><option>Otro</option></select></div><div class="grid2"><div class="form-group"><label>Cantidad</label><input type="number" id="pu-qty" step="0.01"></div><div class="form-group"><label>Costo u.</label><input type="number" id="pu-cost"></div></div><div class="form-group"><label>Proveedor</label><input id="pu-supplier"></div><div class="form-group"><label>¿Agregar a inventario?</label><select id="pu-product"><option value="new">➕ Crear nuevo</option><option value="">— Solo registrar —</option></select></div><div id="pu-new-product-wrap" style="background:var(--surface2);padding:12px;border-radius:8px;margin-bottom:12px"><div class="grid2"><div class="form-group"><label>Precio Venta</label><input type="number" id="pu-sell-price"></div><div class="form-group"><label>Categoría Venta</label><select id="pu-sell-cat"><option>Bebidas</option><option>Snacks</option><option>Comida</option><option>Otro</option></select></div></div><div class="form-group"><label>Emoji</label><input id="pu-sell-emoji"></div></div><div class="flex-between mb-16"><span class="text-muted">Total:</span><span class="fw-bold text-yellow" id="pu-total">RD$0.00</span></div><input type="hidden" id="pu-edit-id"><button class="btn btn-primary w100" onclick="savePurchase()">Guardar</button></div></div>
-  <div class="modal-overlay" id="modal-client"><div class="modal"><div class="modal-header"><div class="modal-title" id="mc-title">Cliente</div><button class="close-btn" onclick="closeModal('modal-client')">×</button></div><div class="form-group"><label>Nombre</label><input id="c-name"></div><div class="form-group"><label>Teléfono</label><input id="c-phone"></div><input type="hidden" id="c-edit-id"><button class="btn btn-primary w100" onclick="saveClient()">Guardar</button></div></div>
+  <div class="modal-overlay" id="modal-client"><div class="modal"><div class="modal-header"><div class="modal-title" id="mc-title">Cliente</div><button class="close-btn" onclick="closeModal('modal-client')">×</button></div><div class="form-group"><label>Nombre</label><input id="c-name"></div><div class="form-group"><label>Teléfono</label><input id="c-phone"></div><div class="form-group"><label>PIN de Acceso (App Cliente)</label><input id="c-pin" placeholder="Opcional (Dejar vacío para que el cliente lo cree)"></div><input type="hidden" id="c-edit-id"><button class="btn btn-primary w100" onclick="saveClient()">Guardar</button></div></div>
   <div class="modal-overlay" id="modal-approve-web">
     <div class="modal">
       <div class="modal-header">
@@ -435,26 +367,27 @@ const ADMIN_PIN = "Turealcotise07$@"; // <--- Tu clave para entrar
 // ==========================================
 
 let appMode = null; 
-const DEFAULT_DATA = {"products": [{"id": 12, "name": "ENERGIZANTE MONSTER ENERGY (BLACK)", "emoji": "🍾", "cat": "Bebidas", "price": 125, "cost": 110.8, "stock": 20, "type": "simple"}, {"id": 35, "name": "REFRESCO COCA COLA ZERO", "emoji": "🥤", "cat": "Bebidas", "price": 30, "cost": 21.7, "stock": 15, "type": "simple"}, {"id": 37, "name": "JUGO RICA NARANJA 100%", "emoji": "🥃🍊", "cat": "Bebidas", "price": 50, "cost": 32.9, "stock": 5, "type": "simple"}, {"id": 41, "name": "EL JUGO RICA PEQUEÑO (200 ML)", "emoji": "🧃", "cat": "Bebidas", "price": 30, "cost": 24.5, "stock": 24, "type": "simple"}], "recipes": [{"id": 38, "name": "TOSTADA DE JAMO Y QUESO", "emoji": "🥪", "price": 85, "cost": 56.875, "ingredients": [{"name": "JAMON", "qty": 0.125, "cost": 85}, {"name": "QUESO", "qty": 0.125, "cost": 290}, {"name": "PAN", "qty": 1, "cost": 10}], "type": "recipe", "stock": 9999}, {"id": 39, "name": "TOSTADA JAMON, QUESO Y HUEVO", "emoji": "🥚🥪", "price": 120, "cost": 56.875, "ingredients": [{"name": "JAMON", "qty": 0.125, "cost": 85}, {"name": "QUESO", "qty": 0.125, "cost": 290}, {"name": "PAN", "qty": 1, "cost": 10}], "type": "recipe", "stock": 9999}], "clients": [{"id": 10, "name": "Junior Pichardo", "phone": ""}, {"id": 14, "name": "Juan Reyes", "phone": ""}, {"id": 15, "name": "Jerliny Peralta", "phone": ""}, {"id": 16, "name": "Jose Ortega", "phone": ""}, {"id": 17, "name": "Acacio Sabino", "phone": ""}, {"id": 18, "name": "Marcos Suarez", "phone": ""}, {"id": 19, "name": "Jhonatan Quezada", "phone": ""}, {"id": 20, "name": "Estephany Rosario", "phone": ""}, {"id": 21, "name": "Gifraily Martinez", "phone": ""}, {"id": 22, "name": "Yeremi Polonia", "phone": ""}, {"id": 23, "name": "Odrys Diaz", "phone": ""}, {"id": 24, "name": "Noe Suarez", "phone": ""}, {"id": 25, "name": "Nathaly Tejada", "phone": ""}, {"id": 26, "name": "Jose Ortega", "phone": ""}, {"id": 27, "name": "Jose Hernandez", "phone": ""}, {"id": 28, "name": "Isamar Lora", "phone": ""}, {"id": 29, "name": "Gifraily Martinez", "phone": ""}, {"id": 30, "name": "Frailin Castillo", "phone": ""}, {"id": 31, "name": "Elian Batista", "phone": ""}, {"id": 32, "name": "Awilda Rosario", "phone": ""}, {"id": 33, "name": "Adrian Serra", "phone": ""}, {"id": 42, "name": "Noemi Mendez", "phone": ""}, {"id": 60, "name": "Alba Florencio (Esposa de Juan)", "phone": ""}, {"id": 64, "name": "Luis Titen", "phone": "8098863186"}], "sales": [{"id": 13, "date": "2026-05-07T15:26:32.299Z", "clientId": 10, "clientName": "Junior Pichardo", "items": [{"id": 12, "type": "simple", "name": "ENERGIZANTE MONSTER ENERGY (BLACK)", "emoji": "🍾", "price": 125, "cost": 110.8, "qty": 1}], "total": 125, "payType": "credito", "creditDays": 1, "dueDate": "2026-05-08", "paid": false}, {"id": 43, "date": "2026-05-07T15:52:04.614Z", "clientId": 42, "clientName": "Noemi Mendez", "items": [{"id": 37, "type": "simple", "name": "JUGO RICA NARANJA 100%", "emoji": "🥃🍊", "price": 50, "cost": 32.9, "qty": 2}, {"id": 38, "type": "recipe", "name": "TOSTADA DE JAMO Y QUESO", "emoji": "🥪", "price": 85, "cost": 56.875, "qty": 2}], "total": 270, "payType": "credito", "creditDays": 1, "dueDate": "2026-05-08", "paid": false}, {"id": 44, "date": "2026-05-07T15:52:39.157Z", "clientId": 10, "clientName": "Junior Pichardo", "items": [{"id": 39, "type": "recipe", "name": "TOSTADA JAMON, QUESO Y HUEVO", "emoji": "🥚🥪", "price": 120, "cost": 56.875, "qty": 1}, {"id": 38, "type": "recipe", "name": "TOSTADA DE JAMO Y QUESO", "emoji": "🥪", "price": 85, "cost": 56.875, "qty": 1}], "total": 205, "payType": "credito", "creditDays": 1, "dueDate": "2026-05-08", "paid": false}, {"id": 45, "date": "2026-05-07T15:52:46.805Z", "clientId": 14, "clientName": "Juan Reyes", "items": [{"id": 38, "type": "recipe", "name": "TOSTADA DE JAMO Y QUESO", "emoji": "🥪", "price": 85, "cost": 56.875, "qty": 2}], "total": 170, "payType": "credito", "creditDays": 1, "dueDate": "2026-05-08", "paid": false}, {"id": 46, "date": "2026-05-07T15:52:55.310Z", "clientId": 33, "clientName": "Adrian Serra", "items": [{"id": 38, "type": "recipe", "name": "TOSTADA DE JAMO Y QUESO", "emoji": "🥪", "price": 85, "cost": 56.875, "qty": 1}, {"id": 39, "type": "recipe", "name": "TOSTADA JAMON, QUESO Y HUEVO", "emoji": "🥚🥪", "price": 120, "cost": 56.875, "qty": 1}], "total": 205, "payType": "credito", "creditDays": 1, "dueDate": "2026-05-08", "paid": false}, {"id": 47, "date": "2026-05-07T15:53:08.374Z", "clientId": 24, "clientName": "Noe Suarez", "items": [{"id": 38, "type": "recipe", "name": "TOSTADA DE JAMO Y QUESO", "emoji": "🥪", "price": 85, "cost": 56.875, "qty": 1}], "total": 85, "payType": "credito", "creditDays": 1, "dueDate": "2026-05-08", "paid": false}, {"id": 48, "date": "2026-05-07T15:53:20.831Z", "clientId": 18, "clientName": "Marcos Suarez", "items": [{"id": 38, "type": "recipe", "name": "TOSTADA DE JAMO Y QUESO", "emoji": "🥪", "price": 85, "cost": 56.875, "qty": 1}], "total": 85, "payType": "credito", "creditDays": 1, "dueDate": "2026-05-08", "paid": false}, {"id": 49, "date": "2026-05-07T15:53:29.582Z", "clientId": 31, "clientName": "Elian Batista", "items": [{"id": 38, "type": "recipe", "name": "TOSTADA DE JAMO Y QUESO", "emoji": "🥪", "price": 85, "cost": 56.875, "qty": 2}], "total": 170, "payType": "credito", "creditDays": 1, "dueDate": "2026-05-08", "paid": false}, {"id": 50, "date": "2026-05-07T15:53:48.478Z", "clientId": 15, "clientName": "Jerliny Peralta", "items": [{"id": 38, "type": "recipe", "name": "TOSTADA DE JAMO Y QUESO", "emoji": "🥪", "price": 85, "cost": 56.875, "qty": 1}], "total": 85, "payType": "credito", "creditDays": 1, "dueDate": "2026-05-08", "paid": false}, {"id": 51, "date": "2026-05-07T15:54:03.142Z", "clientId": 31, "clientName": "Elian Batista", "items": [{"id": 35, "type": "simple", "name": "REFRESCO COCA COLA ZERO", "emoji": "🥤", "price": 30, "cost": 21.7, "qty": 1}], "total": 30, "payType": "credito", "creditDays": 1, "dueDate": "2026-05-08", "paid": false}, {"id": 52, "date": "2026-05-07T15:54:26.118Z", "clientId": 14, "clientName": "Juan Reyes", "items": [{"id": 12, "type": "simple", "name": "ENERGIZANTE MONSTER ENERGY (BLACK)", "emoji": "🍾", "price": 125, "cost": 110.8, "qty": 1}], "total": 125, "payType": "credito", "creditDays": 1, "dueDate": "2026-05-08", "paid": false}, {"id": 53, "date": "2026-05-07T15:54:43.014Z", "clientId": 24, "clientName": "Noe Suarez", "items": [{"id": 12, "type": "simple", "name": "ENERGIZANTE MONSTER ENERGY (BLACK)", "emoji": "🍾", "price": 125, "cost": 110.8, "qty": 1}], "total": 125, "payType": "credito", "creditDays": 1, "dueDate": "2026-05-08", "paid": false}, {"id": 54, "date": "2026-05-07T15:55:01.663Z", "clientId": 19, "clientName": "Jhonatan Quezada", "items": [{"id": 35, "type": "simple", "name": "REFRESCO COCA COLA ZERO", "emoji": "🥤", "price": 30, "cost": 21.7, "qty": 1}], "total": 30, "payType": "credito", "creditDays": 1, "dueDate": "2026-05-08", "paid": false}, {"id": 55, "date": "2026-05-07T16:34:26.710Z", "clientId": 19, "clientName": "Jhonatan Quezada", "items": [{"id": 35, "type": "simple", "name": "REFRESCO COCA COLA ZERO", "emoji": "🥤", "price": 30, "cost": 21.7, "qty": 1}], "total": 30, "payType": "credito", "creditDays": 1, "dueDate": "2026-05-08", "paid": false}, {"id": 56, "date": "2026-05-07T16:34:35.775Z", "clientId": 18, "clientName": "Marcos Suarez", "items": [{"id": 35, "type": "simple", "name": "REFRESCO COCA COLA ZERO", "emoji": "🥤", "price": 30, "cost": 21.7, "qty": 1}], "total": 30, "payType": "credito", "creditDays": 1, "dueDate": "2026-05-08", "paid": false}, {"id": 57, "date": "2026-05-07T16:34:49.463Z", "clientId": 22, "clientName": "Yeremi Polonia", "items": [{"id": 35, "type": "simple", "name": "REFRESCO COCA COLA ZERO", "emoji": "🥤", "price": 30, "cost": 21.7, "qty": 1}], "total": 30, "payType": "credito", "creditDays": 1, "dueDate": "2026-05-08", "paid": false}, {"id": 58, "date": "2026-05-07T16:35:05.374Z", "clientId": 28, "clientName": "Isamar Lora", "items": [{"id": 35, "type": "simple", "name": "REFRESCO COCA COLA ZERO", "emoji": "🥤", "price": 30, "cost": 21.7, "qty": 1}], "total": 30, "payType": "inmediato", "creditDays": 0, "dueDate": null, "paid": true}, {"id": 59, "date": "2026-05-07T16:42:46.036Z", "clientId": 21, "clientName": "Gifraily Martinez", "items": [{"id": 35, "type": "simple", "name": "REFRESCO COCA COLA ZERO", "emoji": "🥤", "price": 30, "cost": 21.7, "qty": 1}], "total": 30, "payType": "credito", "creditDays": 1, "dueDate": "2026-05-08", "paid": false}, {"id": 61, "date": "2026-05-07T16:43:33.697Z", "clientId": 60, "clientName": "Alba Florencio (Esposa de Juan)", "items": [{"id": 35, "type": "simple", "name": "REFRESCO COCA COLA ZERO", "emoji": "🥤", "price": 30, "cost": 21.7, "qty": 1}], "total": 30, "payType": "credito", "creditDays": 1, "dueDate": "2026-05-08", "paid": false}, {"id": 63, "date": "2026-05-07T16:58:24.977Z", "clientId": null, "clientName": "Al Contado", "items": [{"id": 38, "type": "recipe", "name": "TOSTADA DE JAMO Y QUESO", "emoji": "🥪", "price": 85, "cost": 56.875, "qty": 1}], "total": 85, "payType": "inmediato", "creditDays": 0, "dueDate": null, "paid": true}, {"id": 65, "date": "2026-05-07T16:59:38.897Z", "clientId": 64, "clientName": "Luis Titen", "items": [{"id": 38, "type": "recipe", "name": "TOSTADA DE JAMO Y QUESO", "emoji": "🥪", "price": 85, "cost": 56.875, "qty": 1}], "total": 85, "payType": "credito", "creditDays": 1, "dueDate": "2026-05-08", "paid": false}, {"id": 66, "date": "2026-05-07T17:39:21.201Z", "clientId": 42, "clientName": "Noemi Mendez", "items": [{"id": 35, "type": "simple", "name": "REFRESCO COCA COLA ZERO", "emoji": "🥤", "price": 30, "cost": 21.7, "qty": 1}], "total": 30, "payType": "credito", "creditDays": 1, "dueDate": "2026-05-08", "paid": false}, {"id": 67, "date": "2026-05-07T17:39:32.602Z", "clientId": 14, "clientName": "Juan Reyes", "items": [{"id": 12, "type": "simple", "name": "ENERGIZANTE MONSTER ENERGY (BLACK)", "emoji": "🍾", "price": 125, "cost": 110.8, "qty": 1}], "total": 125, "payType": "credito", "creditDays": 1, "dueDate": "2026-05-08", "paid": false}], "purchases": [{"id": 11, "date": "2026-05-07T15:26:09.011Z", "item": "ENERGIZANTE MONSTER ENERGY (BLACK)", "qty": 24, "cost": 110.8, "total": 2659.2, "supplier": "Super Lorenzo", "cat": "Bebidas"}, {"id": 34, "date": "2026-05-07T15:32:37.003Z", "item": "REFRESCO COCA COLA ZERO", "qty": 24, "cost": 21.7, "total": 520.8, "supplier": "Super Lorenzo", "cat": "Bebidas"}, {"id": 36, "date": "2026-05-07T15:35:42.963Z", "item": "JUGO RICA NARANJA 100%", "qty": 7, "cost": 32.9, "total": 230.29999999999998, "supplier": "Super Lorenzo", "cat": "Bebidas"}, {"id": 40, "date": "2026-05-07T15:50:52.932Z", "item": "EL JUGO RICA PEQUEÑO (200 ML)", "qty": 24, "cost": 24.5, "total": 588, "supplier": "Super Mercado", "cat": "Bebidas"}], "notes": "wrjwsfj", "nextId": 68, "onlineOrders": []};
+// Se mantiene la estructura original
+const DEFAULT_DATA = {"products": [{"id": 12, "name": "ENERGIZANTE MONSTER ENERGY (BLACK)", "emoji": "🍾", "cat": "Bebidas", "price": 125, "cost": 110.8, "stock": 20, "type": "simple"}, {"id": 35, "name": "REFRESCO COCA COLA ZERO", "emoji": "🥤", "cat": "Bebidas", "price": 30, "cost": 21.7, "stock": 15, "type": "simple"}, {"id": 37, "name": "JUGO RICA NARANJA 100%", "emoji": "🥃🍊", "cat": "Bebidas", "price": 50, "cost": 32.9, "stock": 5, "type": "simple"}, {"id": 41, "name": "EL JUGO RICA PEQUEÑO (200 ML)", "emoji": "🧃", "cat": "Bebidas", "price": 30, "cost": 24.5, "stock": 24, "type": "simple"}], "recipes": [{"id": 38, "name": "TOSTADA DE JAMO Y QUESO", "emoji": "🥪", "price": 85, "cost": 56.875, "ingredients": [{"name": "JAMON", "qty": 0.125, "cost": 85}, {"name": "QUESO", "qty": 0.125, "cost": 290}, {"name": "PAN", "qty": 1, "cost": 10}], "type": "recipe", "stock": 9999}, {"id": 39, "name": "TOSTADA JAMON, QUESO Y HUEVO", "emoji": "🥚🥪", "price": 120, "cost": 56.875, "ingredients": [{"name": "JAMON", "qty": 0.125, "cost": 85}, {"name": "QUESO", "qty": 0.125, "cost": 290}, {"name": "PAN", "qty": 1, "cost": 10}], "type": "recipe", "stock": 9999}], "clients": [{"id": 10, "name": "Junior Pichardo", "phone": ""}, {"id": 14, "name": "Juan Reyes", "phone": ""}, {"id": 15, "name": "Jerliny Peralta", "phone": ""}, {"id": 16, "name": "Jose Ortega", "phone": ""}, {"id": 17, "name": "Acacio Sabino", "phone": ""}, {"id": 18, "name": "Marcos Suarez", "phone": ""}, {"id": 19, "name": "Jhonatan Quezada", "phone": ""}, {"id": 20, "name": "Estephany Rosario", "phone": ""}, {"id": 21, "name": "Gifraily Martinez", "phone": ""}, {"id": 22, "name": "Yeremi Polonia", "phone": ""}, {"id": 23, "name": "Odrys Diaz", "phone": ""}, {"id": 24, "name": "Noe Suarez", "phone": ""}, {"id": 25, "name": "Nathaly Tejada", "phone": ""}, {"id": 26, "name": "Jose Ortega", "phone": ""}, {"id": 27, "name": "Jose Hernandez", "phone": ""}, {"id": 28, "name": "Isamar Lora", "phone": ""}, {"id": 29, "name": "Gifraily Martinez", "phone": ""}, {"id": 30, "name": "Frailin Castillo", "phone": ""}, {"id": 31, "name": "Elian Batista", "phone": ""}, {"id": 32, "name": "Awilda Rosario", "phone": ""}, {"id": 33, "name": "Adrian Serra", "phone": ""}, {"id": 42, "name": "Noemi Mendez", "phone": ""}, {"id": 60, "name": "Alba Florencio (Esposa de Juan)", "phone": ""}, {"id": 64, "name": "Luis Titen", "phone": "8098863186"}], "sales": [], "purchases": [], "notes": "", "nextId": 100, "onlineOrders": []};
 let data = JSON.parse(localStorage.getItem('negocio_data')||'null') || DEFAULT_DATA;
-// Si los datos locales están vacíos o sin productos, usar el backup por defecto
 if(!data.products || data.products.length === 0) { data = JSON.parse(JSON.stringify(DEFAULT_DATA)); localStorage.setItem('negocio_data', JSON.stringify(data)); }
 if(!data.onlineOrders) data.onlineOrders = [];
 
 let posCart = []; 
 let storeCart = []; 
+let loggedInClient = JSON.parse(localStorage.getItem('client_logged_in') || 'null');
 
-// Si el link tiene "?tienda", entra directo al catálogo sin preguntar nombre
 window.onload = () => {
   if(window.location.search.includes('tienda')) {
     document.getElementById('landing-wrapper').style.display = 'none';
     appMode = 'client';
     document.getElementById('client-wrapper').style.display = 'block';
     
-    // Solo mostramos el catálogo inicialmente
     loadFromCloud().then(() => { 
-      renderClientCatalog();
-      tryAutoLogin();
+      populateClientNames();
+      renderClientCatalog(); 
+      // Por defecto arranca en Mi Cuenta
+      showClientPage('account', document.getElementById('nav-account'));
     });
   }
 }
@@ -472,7 +405,7 @@ function enterAdminMode() {
   }
 }
 
-// ============ FUNCIONES DE NUBE COMUNES ============
+// ============ NUBE ============
 function updateCloudStatus(msg, color) {
   const adminEl = document.getElementById('admin-cloud-status');
   const clientEl = document.getElementById('client-cloud-status');
@@ -483,81 +416,189 @@ function updateCloudStatus(msg, color) {
 async function loadFromCloud() {
   updateCloudStatus('🔄 Conectando...', 'var(--yellow)');
   try {
-    // Google Scripts redirigen — necesitamos seguir la redirección manualmente
-    const res = await fetch(SCRIPT_URL + '?t=' + Date.now(), { 
-      cache: 'no-store', 
-      credentials: 'omit',
-      redirect: 'follow',
-      mode: 'cors'
-    });
+    const res = await fetch(SCRIPT_URL + '?t=' + Date.now(), { cache: 'no-store', credentials: 'omit', redirect: 'follow', mode: 'cors' });
     const text = await res.text();
     let cloudData;
-    try { cloudData = JSON.parse(text); } catch(e) { throw new Error('JSON inválido: ' + text.substring(0,100)); }
+    try { cloudData = JSON.parse(text); } catch(e) { throw new Error('JSON inválido'); }
     if(cloudData && cloudData.products) {
       data = cloudData;
       if(!data.onlineOrders) data.onlineOrders = [];
       localStorage.setItem('negocio_data', JSON.stringify(data));
       updateCloudStatus('🟢 Conectado', 'var(--green)');
-    } else if(cloudData && cloudData.error) {
-      throw new Error('Script error: ' + cloudData.error);
-    } else { 
-      updateCloudStatus('☁️ Nube vacía', 'var(--muted)');
-    }
+    } else { throw new Error('Estructura vacía'); }
   } catch(e) { 
-    console.warn('loadFromCloud error:', e.message);
-    // Fallback: usar datos de localStorage si hay productos guardados
     const local = JSON.parse(localStorage.getItem('negocio_data') || 'null');
-    if(local && local.products && local.products.length > 0) {
-      data = local;
-      if(!data.onlineOrders) data.onlineOrders = [];
-      updateCloudStatus('📱 Local (sin nube)', 'var(--accent)');
-    } else {
-      updateCloudStatus('🔴 Offline — Sin datos', 'var(--accent2)');
-    }
+    if(local && local.products && local.products.length > 0) { data = local; updateCloudStatus('📱 Local (sin nube)', 'var(--accent)'); } 
+    else { updateCloudStatus('🔴 Offline', 'var(--accent2)'); }
+  }
+  // Refrescar auth si el cliente logueado fue borrado en la nube
+  if(appMode === 'client' && loggedInClient) {
+      const exists = data.clients.find(c => c.id === loggedInClient.id);
+      if(!exists) logoutClient();
+      else refreshClientDashboard();
   }
 }
 
 let syncTimeout;
 function saveToCloud() {
-  if(appMode !== 'admin') return; 
+  if(appMode !== 'admin' && appMode !== 'client') return; 
   updateCloudStatus('🔄 Subiendo...', 'var(--accent)');
   clearTimeout(syncTimeout);
   syncTimeout = setTimeout(() => {
-    // Guardar en nube (no-cors es necesario para POST a Google Scripts)
     fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(data) })
       .then(() => updateCloudStatus('🟢 Guardado', 'var(--green)'))
-      .catch(() => {})
-    .then(() => updateCloudStatus('🟢 Guardado', 'var(--green)'))
-    .catch(e => updateCloudStatus('🔴 Error al subir', 'var(--accent2)'));
+      .catch(e => updateCloudStatus('🔴 Error al subir', 'var(--accent2)'));
   }, 2000);
 }
 
 function save() { 
-  if(appMode === 'admin') {
-    localStorage.setItem('negocio_data', JSON.stringify(data)); 
-    saveToCloud(); 
-  }
+  localStorage.setItem('negocio_data', JSON.stringify(data)); 
+  saveToCloud(); 
 }
 
-function newId(){ return data.nextId++; }
+function newId(){ return Date.now() + Math.floor(Math.random()*1000); } // Asegurar ID único
 function fmt(n){ return 'RD$'+Number(n||0).toLocaleString('es-DO',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function today(){ return new Date().toISOString().split('T')[0]; }
 function dateStr(iso){ return new Date(iso).toLocaleString('es-DO',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }
 function allProds(){ return [...data.products,...data.recipes]; }
 
 // ============================================================================
-// ========================= LÓGICA DEL CLIENTE ===============================
+// ========================= LÓGICA DEL CLIENTE (CUENTAS) =====================
 // ============================================================================
+
 function showClientPage(id, el) {
-  if(id === 'account') { setTimeout(onAccountTabOpen, 50); }
-  if(id === 'cart') { setTimeout(prefillCheckoutIfLogged, 50); }
   document.querySelectorAll('.client-page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.c-nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('client-page-' + id).classList.add('active');
-  el.classList.add('active');
+  if(el) el.classList.add('active');
+  
   if(id === 'cart') renderStoreCart();
+  if(id === 'account') {
+    if(loggedInClient) {
+        document.getElementById('client-auth-view').style.display = 'none';
+        document.getElementById('client-dashboard-view').style.display = 'block';
+        refreshClientDashboard();
+    } else {
+        document.getElementById('client-auth-view').style.display = 'block';
+        document.getElementById('client-dashboard-view').style.display = 'none';
+    }
+  }
 }
 
+function populateClientNames() {
+  const datalist = document.getElementById('client-names-list');
+  datalist.innerHTML = data.clients.map(c => `<option value="${c.name}">`).join('');
+}
+
+function checkAuthName() {
+  const nameVal = document.getElementById('auth-name').value.trim();
+  const existing = data.clients.find(c => c.name.toLowerCase() === nameVal.toLowerCase());
+  const phoneGroup = document.getElementById('auth-phone-group');
+  const msg = document.getElementById('auth-name-msg');
+  const pinLabel = document.getElementById('auth-pin-label');
+
+  if(existing) {
+      phoneGroup.style.display = 'none';
+      msg.style.display = 'block';
+      pinLabel.textContent = existing.pin ? 'Ingresa tu PIN de 4 números' : 'Crea un PIN de 4 números para tu cuenta';
+  } else {
+      phoneGroup.style.display = nameVal ? 'block' : 'none';
+      msg.style.display = 'none';
+      pinLabel.textContent = 'Crea un PIN de 4 números';
+  }
+}
+
+function handleAuth() {
+  const name = document.getElementById('auth-name').value.trim();
+  const pin = document.getElementById('auth-pin').value.trim();
+  if(!name) return alert('Por favor ingresa tu nombre.');
+  if(!pin || pin.length < 4) return alert('Ingresa un PIN de al menos 4 números.');
+
+  let client = data.clients.find(c => c.name.toLowerCase() === name.toLowerCase());
+
+  if(client) {
+      // Cliente existe
+      if(client.pin) {
+          if(client.pin !== pin) return alert('PIN incorrecto. Intenta de nuevo.');
+      } else {
+          // Reclamar cuenta
+          client.pin = pin;
+          save(); // Sube a la nube que ya reclamó su cuenta
+          alert('¡Cuenta configurada exitosamente!');
+      }
+  } else {
+      // Nuevo cliente
+      const phone = document.getElementById('auth-phone').value.trim();
+      if(!phone) return alert('Como eres nuevo, necesitamos tu teléfono para registrarte.');
+      client = { id: newId(), name: name, phone: phone, pin: pin };
+      data.clients.push(client);
+      save();
+      alert('¡Cuenta creada exitosamente!');
+  }
+
+  // Iniciar Sesión
+  loggedInClient = client;
+  localStorage.setItem('client_logged_in', JSON.stringify(loggedInClient));
+  showClientPage('account', document.getElementById('nav-account'));
+}
+
+function logoutClient() {
+    loggedInClient = null;
+    localStorage.removeItem('client_logged_in');
+    document.getElementById('auth-name').value = '';
+    document.getElementById('auth-phone').value = '';
+    document.getElementById('auth-pin').value = '';
+    checkAuthName();
+    showClientPage('account', document.getElementById('nav-account'));
+}
+
+function refreshClientDashboard() {
+    if(!loggedInClient) return;
+    document.getElementById('dash-name').textContent = `Hola, ${loggedInClient.name}`;
+    document.getElementById('dash-phone').textContent = loggedInClient.phone || '';
+
+    const resultBox = document.getElementById('client-account-result');
+    const sales = data.sales.filter(s => s.clientId == loggedInClient.id && !s.paid);
+    const totalDebt = sales.reduce((s, x) => s + x.total, 0);
+
+    if(totalDebt > 0) {
+      let html = `<div class="debt-card"><div style="font-size:1.5rem">🔴</div><h3 style="color:var(--accent2); margin:8px 0;">Balance Pendiente</h3><div style="font-size:2rem; font-weight:800; font-family:'Syne',sans-serif;">${fmt(totalDebt)}</div>
+      <p style="font-size:0.85rem; margin-top:12px; font-weight:bold;">Para pagar, realiza una transferencia a:</p>
+      <div style="background:#00000033; padding:10px; border-radius:8px; margin-top:8px; text-align:left; font-size:0.9rem;">
+        🏦 <strong>Banco Popular</strong> (Corriente)<br>
+        🔢 Cuenta: <strong>852775865</strong><br>
+        📱 WhatsApp: <strong>809 886 3186</strong>
+      </div>
+      <div style="text-align:left; margin-top:12px; background:#00000033; padding:10px; border-radius:8px;">`;
+      sales.forEach(s => { html += `<div style="display:flex; justify-content:space-between; font-size:0.8rem; border-bottom:1px solid #ffffff11; padding:6px 0;"><span>${s.date.split('T')[0]}</span><span style="font-weight:bold">${fmt(s.total)}</span></div>`; });
+      html += `</div></div>`; resultBox.innerHTML = html;
+    } else {
+      resultBox.innerHTML = `<div class="ok-card"><div style="font-size:2rem">✅</div><h3 style="color:var(--green); margin:8px 0;">¡Estás al día!</h3><p style="font-size:0.9rem;">No tienes deudas pendientes.</p></div>`;
+    }
+
+    // Mostrar pedidos web pendientes
+    const webOrdersBox = document.getElementById('client-web-orders');
+    const myOrders = (data.onlineOrders || []).filter(o => o.clientId == loggedInClient.id);
+    if(myOrders.length > 0) {
+        webOrdersBox.innerHTML = myOrders.map(o => `
+            <div class="card" style="padding:12px;">
+                <div class="flex-between" style="font-size:0.8rem; color:var(--muted); margin-bottom:8px;">
+                    <span>${dateStr(o.date)}</span>
+                    <span class="badge badge-yellow">En Local ⏳</span>
+                </div>
+                <div style="font-size:0.9rem;">${o.items.map(i=>`${i.qty}x ${i.name}`).join(', ')}</div>
+                <div class="flex-between mt-10">
+                    <span class="fw-bold text-yellow">${fmt(o.total)}</span>
+                    <span style="font-size:0.8rem">${o.payType}</span>
+                </div>
+            </div>
+        `).join('');
+    } else {
+        webOrdersBox.innerHTML = `<p class="text-muted" style="text-align:center; font-size:0.85rem;">No tienes pedidos en preparación ahora mismo.</p>`;
+    }
+}
+
+// ========================= CATÁLOGO Y CARRITO ===============================
 function renderClientCatalog() {
   const container = document.getElementById('client-catalog-container');
   const availableItems = [...(data.recipes || []), ...(data.products || []).filter(p => p.stock > 0)];
@@ -610,51 +651,22 @@ function renderStoreCart() {
     total += (item.price * item.qty);
     return `<div class="cart-item"><div style="font-size:1.8rem">${item.emoji}</div><div style="flex-grow:1; margin-left:12px;"><div style="font-size:.9rem; font-weight:500;">${item.name}</div><div style="color:var(--accent); font-weight:700; font-size:.9rem; margin-top:4px;">${fmt(item.price * item.qty)}</div></div><div style="display:flex; align-items:center; gap:10px;"><button class="qty-btn" onclick="updateStoreQty(${index}, -1)">-</button><span style="font-weight:bold; width:20px; text-align:center">${item.qty}</span><button class="qty-btn" onclick="updateStoreQty(${index}, 1)">+</button></div></div>`;
   }).join('');
+  
   document.getElementById('client-cart-total').textContent = fmt(total);
-  
-  populateCheckoutClients();
   checkoutBox.style.display = 'block';
-}
 
-function populateCheckoutClients() {
-  const sel = document.getElementById('client-select-existing');
-  const currentVal = sel.value;
-  sel.innerHTML = '<option value="NEW">➕ Soy cliente nuevo / No estoy en la lista</option>';
-  
-  const sortedClients = [...data.clients].sort((a,b) => a.name.localeCompare(b.name));
-  
-  sortedClients.forEach(c => {
-    sel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
-  });
-  
-  if(currentVal && currentVal !== "NEW" && data.clients.find(c=>c.id==currentVal)) {
-    sel.value = currentVal;
+  if(loggedInClient) {
+      document.getElementById('cart-auth-warning').style.display = 'none';
+      document.getElementById('cart-checkout-form').style.display = 'block';
   } else {
-    sel.value = 'NEW';
+      document.getElementById('cart-auth-warning').style.display = 'block';
+      document.getElementById('cart-checkout-form').style.display = 'none';
   }
-  toggleNewClientFields();
-}
-
-function toggleNewClientFields() {
-  const isNew = document.getElementById('client-select-existing').value === 'NEW';
-  document.getElementById('new-client-fields').style.display = isNew ? 'block' : 'none';
 }
 
 async function sendWebOrder() {
-  const clientSel = document.getElementById('client-select-existing').value;
-  let name = "", phone = "", clientId = null;
-
-  if (clientSel === 'NEW') {
-    name = document.getElementById('client-order-name').value.trim();
-    phone = document.getElementById('client-order-phone').value.trim();
-    if (!name || !phone) return alert('Por favor, ingresa tu nombre completo y teléfono.');
-  } else {
-    clientId = parseInt(clientSel);
-    const c = data.clients.find(x => x.id === clientId);
-    name = c.name;
-    phone = c.phone || "";
-  }
-
+  if(!loggedInClient) return alert('Debes iniciar sesión primero.');
+  
   const payType = document.getElementById('client-order-payment').value;
   const btn = document.getElementById('checkout-btn');
   btn.textContent = "⏳ Enviando pedido..."; btn.disabled = true;
@@ -662,61 +674,36 @@ async function sendWebOrder() {
   const newOrder = {
     id: Date.now(),
     date: new Date().toISOString(),
-    clientId: clientId,
-    clientName: name,
-    clientPhone: phone,
+    clientId: loggedInClient.id,
+    clientName: loggedInClient.name,
+    clientPhone: loggedInClient.phone || "",
     payType: payType,
     items: storeCart.map(i => ({...i})),
     total: storeCart.reduce((s,i) => s + (i.price*i.qty), 0),
     status: 'pending'
   };
 
-  // Enviar pedido al Google Script
-  let enviado = false;
-  try {
-    // Intentar con fetch normal primero (funciona en GitHub Pages)
-    const res = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action: 'newOrder', order: newOrder })
-    });
-    if (res.ok || res.type === 'opaque') enviado = true;
-  } catch(e) {
-    // Fallback con no-cors
-    try {
-      await fetch(SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'newOrder', order: newOrder })
-      });
-      enviado = true;
-    } catch(e2) { console.warn("Error enviando:", e2); }
-  }
+  try { fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'newOrder', order: newOrder }) }); } catch(e) { }
 
-  // Guardar siempre en localStorage como respaldo
-  const pendingLocal = JSON.parse(localStorage.getItem('client_pending_orders') || '[]');
-  pendingLocal.push(newOrder);
-  localStorage.setItem('client_pending_orders', JSON.stringify(pendingLocal));
+  if (!data.onlineOrders) data.onlineOrders = [];
+  data.onlineOrders.push(newOrder);
+  save(); // Guarda y sincroniza
 
-  alert("✅ ¡Tu pedido llegó al local! Pronto lo prepararemos.");
+  alert("✅ ¡ÉXITO! Tu pedido ha llegado al local.");
   storeCart = []; updateStoreCartBadge();
-  document.getElementById('client-order-name').value = '';
-  document.getElementById('client-order-phone').value = '';
-  document.getElementById('client-select-existing').value = 'NEW';
-  toggleNewClientFields();
-  showClientPage('catalog', document.querySelector('.c-nav-item'));
+  
+  showClientPage('account', document.getElementById('nav-account'));
   btn.textContent = "✅ Enviar Pedido al Local"; btn.disabled = false;
 }
 
-// Auto-polling: refresca pedidos web cada 30s cuando el admin está activo
+// Auto-polling admin
 let adminPollInterval = null;
 function startAdminPolling() {
   if(adminPollInterval) return;
   adminPollInterval = setInterval(async () => {
     if(appMode !== 'admin') return;
     try {
-      const res = await fetch(SCRIPT_URL + '?nocache=' + Date.now());
+      const res = await fetch(SCRIPT_URL);
       const cloudData = await res.json();
       if(cloudData && cloudData.products) {
         const prevCount = (data.onlineOrders||[]).length;
@@ -725,337 +712,15 @@ function startAdminPolling() {
         localStorage.setItem('negocio_data', JSON.stringify(data));
         if(data.onlineOrders.length > prevCount) {
           renderWebOrders(); updateAlertBadge();
-          // Notificación visual si hay pedidos nuevos
           const diff = data.onlineOrders.length - prevCount;
           document.title = `🔔 ${diff} pedido(s) nuevo(s)! - Admin`;
           setTimeout(() => { document.title = '🏪 Mi Negocio'; }, 5000);
         }
       }
-    } catch(e) { /* silencioso */ }
+    } catch(e) {}
   }, 30000);
 }
 
-// ===== SISTEMA DE CUENTAS DE CLIENTE =====
-let loggedClient = null;
-let selectedClientForLogin = null;
-
-// Animaciones CSS
-const accStyles = document.createElement('style');
-accStyles.textContent = `
-  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
-  @keyframes slideIn { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
-  @keyframes bounceIn { 0% { transform:scale(0.3); opacity:0; } 60% { transform:scale(1.1); } 100% { transform:scale(1); opacity:1; } }
-  .acc-result-item { padding:12px 14px; cursor:pointer; border-bottom:1px solid var(--border); transition:background .2s; font-size:0.95rem; }
-  .acc-result-item:hover { background:var(--accent); color:#000; }
-  .acc-result-item:last-child { border-bottom:none; }
-`;
-document.head.appendChild(accStyles);
-
-function accShow(id) {
-  ['acc-welcome','acc-hasaccount','acc-register','acc-dashboard'].forEach(v => {
-    const el = document.getElementById(v);
-    if(el) el.style.display = 'none';
-  });
-  const target = document.getElementById(id);
-  if(target) target.style.display = '';
-}
-
-function searchClientByName(val) {
-  const results = document.getElementById('acc-search-results');
-  const selected = document.getElementById('acc-selected-client');
-  if(!val || val.length < 2) { results.style.display = 'none'; selected.style.display = 'none'; selectedClientForLogin = null; return; }
-  
-  const matches = data.clients.filter(c => c.name.toLowerCase().includes(val.toLowerCase())).slice(0, 6);
-  if(matches.length === 0) { results.style.display = 'none'; return; }
-  
-  results.innerHTML = matches.map(c => 
-    `<div class="acc-result-item" onclick="selectClientForLogin(${c.id}, '${c.name.replace(/'/g,"\'")}')">
-      👤 ${c.name}${c.phone ? ' <span style="color:var(--muted);font-size:0.75rem;">• ' + c.phone + '</span>' : ''}
-    </div>`
-  ).join('');
-  results.style.display = '';
-}
-
-function selectClientForLogin(id, name) {
-  selectedClientForLogin = data.clients.find(c => c.id === id);
-  document.getElementById('acc-search-name').value = name;
-  document.getElementById('acc-search-results').style.display = 'none';
-  document.getElementById('acc-selected-name').textContent = name;
-  document.getElementById('acc-selected-client').style.display = '';
-}
-
-function confirmClientLogin() {
-  if(!selectedClientForLogin) return;
-  loggedClient = selectedClientForLogin;
-  localStorage.setItem('client_session', JSON.stringify({id: loggedClient.id}));
-  showClientDashboard();
-  // Si venía del carrito, regresar
-  if(localStorage.getItem('cart_return')) {
-    localStorage.removeItem('cart_return');
-    setTimeout(() => showClientPage('cart', document.querySelectorAll('.c-nav-item')[1]), 1000);
-  }
-}
-
-// Validar formulario de registro en tiempo real
-function setupRegisterValidation() {
-  const nameInput = document.getElementById('reg-name');
-  const phoneInput = document.getElementById('reg-phone');
-  const btn = document.getElementById('acc-register-btn');
-  if(!nameInput || !phoneInput || !btn) return;
-  
-  function validate() {
-    const nameOk = nameInput.value.trim().length >= 2;
-    const phoneOk = phoneInput.value.trim().replace(/\D/g,'').length >= 7;
-    btn.disabled = !(nameOk && phoneOk);
-    btn.style.opacity = (nameOk && phoneOk) ? '1' : '0.5';
-    btn.style.cursor = (nameOk && phoneOk) ? 'pointer' : 'not-allowed';
-  }
-  
-  nameInput.addEventListener('input', function() {
-    validate();
-    const val = this.value.trim();
-    if(val.length < 2) { document.getElementById('reg-name-match').style.display = 'none'; return; }
-    // Buscar coincidencias de nombre
-    const matches = data.clients.filter(c => c.name.toLowerCase().includes(val.toLowerCase()) && (!c.phone || c.phone === '')).slice(0,3);
-    const matchBox = document.getElementById('reg-name-match');
-    if(matches.length > 0) {
-      matchBox.style.display = '';
-      matchBox.innerHTML = '<p style="font-size:0.78rem; color:var(--accent); margin-bottom:6px;">💡 ¿Eres tú? Toca tu nombre para vincularlo:</p>' +
-        matches.map(c => `<div onclick="quickLinkClient(${c.id},'${c.name.replace(/'/g,"\'")}')" style="background:var(--surface); border:1px solid var(--accent); border-radius:8px; padding:8px 12px; cursor:pointer; font-size:0.85rem; margin-bottom:4px;">👤 ${c.name}</div>`).join('');
-    } else {
-      matchBox.style.display = 'none';
-    }
-  });
-  phoneInput.addEventListener('input', validate);
-}
-
-function quickLinkClient(id, name) {
-  // El cliente reconoce su nombre — vincular directamente
-  document.getElementById('reg-name').value = name;
-  document.getElementById('reg-name-match').style.display = 'none';
-  const btn = document.getElementById('acc-register-btn');
-  // Solo necesita confirmar el teléfono
-  const matchBox = document.getElementById('reg-name-match');
-  matchBox.style.display = '';
-  matchBox.innerHTML = `<div style="background:#26de8122; border:1px solid var(--green); border-radius:8px; padding:8px 12px; font-size:0.82rem; color:var(--green);">✅ ¡Te encontramos! Agrega tu teléfono y crea tu cuenta para ver tu historial.</div>`;
-}
-
-function registerClientAccount() {
-  const name = document.getElementById('reg-name').value.trim();
-  const phone = document.getElementById('reg-phone').value.trim().replace(/\D/g,'');
-  const msg = document.getElementById('acc-register-msg');
-  
-  if(!name || name.length < 2) { msg.innerHTML = '<p style="color:var(--accent2)">⚠️ Ingresa tu nombre completo.</p>'; return; }
-  if(!phone || phone.length < 7) { msg.innerHTML = '<p style="color:var(--accent2)">⚠️ Ingresa un teléfono válido.</p>'; return; }
-  
-  // ¿Ya existe cuenta con ese teléfono?
-  const byPhone = data.clients.find(c => c.phone && c.phone.replace(/\D/g,'').includes(phone));
-  if(byPhone) {
-    loggedClient = byPhone;
-    localStorage.setItem('client_session', JSON.stringify({id: loggedClient.id}));
-    msg.innerHTML = '<p style="color:var(--green)">✅ ¡Ya tienes cuenta! Entrando...</p>';
-    setTimeout(() => showClientDashboard(), 700);
-    return;
-  }
-  
-  // ¿Existe cliente con ese nombre sin teléfono? Vincular
-  const byName = data.clients.find(c => c.name.toLowerCase().trim() === name.toLowerCase().trim() && (!c.phone || c.phone === ''));
-  if(byName) {
-    byName.phone = phone;
-    loggedClient = byName;
-  } else {
-    const newClient = { id: newId(), name: name, phone: phone };
-    data.clients.push(newClient);
-    loggedClient = newClient;
-  }
-  
-  save();
-  localStorage.setItem('client_session', JSON.stringify({id: loggedClient.id}));
-  msg.innerHTML = '<p style="color:var(--green)">✅ ¡Cuenta creada! Enviando info por WhatsApp...</p>';
-  setTimeout(() => {
-    sendWhatsAppOnRegister(loggedClient);
-    showClientDashboard();
-    // Si venía del carrito, regresar al carrito
-    if(localStorage.getItem('cart_return')) {
-      localStorage.removeItem('cart_return');
-      setTimeout(() => showClientPage('cart', document.querySelectorAll('.c-nav-item')[1]), 800);
-    }
-  }, 800);
-}
-
-function showClientDashboard() {
-  if(!loggedClient) return;
-  accShow('acc-dashboard');
-  
-  document.getElementById('dash-client-name').textContent = loggedClient.name;
-  
-  // Deuda pendiente
-  const unpaid = data.sales.filter(s => s.clientId == loggedClient.id && !s.paid);
-  const totalDebt = unpaid.reduce((s, x) => s + x.total, 0);
-  const debtBox = document.getElementById('dash-debt-box');
-  
-  if(totalDebt > 0) {
-    debtBox.style.cssText = 'border-radius:16px; padding:20px; margin-bottom:16px; text-align:center; background:#ff6b6b22; border:2px solid var(--accent2);';
-    debtBox.innerHTML = `
-      <div style="font-size:2rem; margin-bottom:4px;">🔴</div>
-      <p style="font-size:0.8rem; color:var(--muted); margin-bottom:4px;">Balance pendiente</p>
-      <div style="font-size:2.4rem; font-weight:900; color:var(--accent2); font-family:'Syne',sans-serif; line-height:1;">${fmt(totalDebt)}</div>
-      <p style="font-size:0.78rem; color:var(--muted); margin-top:8px;">${unpaid.length} compra(s) sin pagar</p>`;
-  } else {
-    debtBox.style.cssText = 'border-radius:16px; padding:20px; margin-bottom:16px; text-align:center; background:#26de8122; border:2px solid var(--green);';
-    debtBox.innerHTML = `
-      <div style="font-size:2rem; margin-bottom:4px;">✅</div>
-      <p style="font-size:0.9rem; color:var(--green); font-weight:700; margin-bottom:4px;">¡Estás al día!</p>
-      <p style="font-size:0.8rem; color:var(--muted);">No tienes deudas pendientes.</p>`;
-  }
-  
-  // Pedido activo (onlineOrders pendiente)
-  const activeOrder = (data.onlineOrders || []).filter(o => o.clientId == loggedClient.id && o.status === 'pending');
-  const activeBox = document.getElementById('dash-active-order');
-  if(activeOrder.length > 0) {
-    const o = activeOrder[activeOrder.length-1];
-    activeBox.style.display = '';
-    document.getElementById('dash-active-order-detail').innerHTML = `
-      <div style="font-size:0.85rem; color:var(--text);">${o.items.map(i => i.qty+'x '+i.name).join(', ')}</div>
-      <div style="font-size:1.1rem; font-weight:700; color:var(--accent); margin-top:4px;">${fmt(o.total)}</div>`;
-  } else {
-    activeBox.style.display = 'none';
-  }
-  
-  // Historial de compras
-  const allSales = data.sales.filter(s => s.clientId == loggedClient.id).sort((a,b) => new Date(b.date)-new Date(a.date));
-  const salesList = document.getElementById('dash-sales-list');
-  
-  if(allSales.length === 0) {
-    salesList.innerHTML = '<div style="text-align:center; padding:24px; color:var(--muted); font-size:0.85rem;">Aún no tienes compras registradas.</div>';
-    return;
-  }
-  
-  salesList.innerHTML = allSales.map(s => {
-    const items = s.items.map(i => i.qty+'x '+i.name).join(', ');
-    const paid = s.paid;
-    return `<div style="background:var(--surface2); border-radius:12px; padding:14px; margin-bottom:8px; border-left:3px solid ${paid ? 'var(--green)' : 'var(--accent2)'};">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-        <span style="font-size:0.72rem; color:var(--muted);">${s.date.split('T')[0]}</span>
-        <span style="font-size:0.72rem; font-weight:700; color:${paid ? 'var(--green)' : 'var(--accent2)'};">${paid ? '✅ Pagado' : '🔴 Pendiente'}</span>
-      </div>
-      <div style="font-size:0.82rem; color:var(--muted); margin-bottom:4px;">${items}</div>
-      <div style="font-size:1rem; font-weight:700; color:var(--accent);">${fmt(s.total)}</div>
-    </div>`;
-  }).join('');
-}
-
-function goToAccountFromCart() {
-  // Guardar que venía del carrito para regresar después
-  localStorage.setItem('cart_return', '1');
-  showClientPage('account', document.querySelectorAll('.c-nav-item')[2]);
-  onAccountTabOpen();
-}
-
-// Número del negocio y cuenta bancaria
-const BUSINESS_PHONE = '18098863186';
-const BUSINESS_BANK = 'Banco Popular — Cuenta Corriente #852775865';
-
-function sendWhatsAppToClient(client) {
-  if(!client || !client.phone) return;
-  const phone = client.phone.replace(/\D/g,'');
-  if(phone.length < 7) return;
-  const fullPhone = phone.startsWith('1') ? phone : '1' + phone;
-  
-  const unpaid = data.sales.filter(s => s.clientId == client.id && !s.paid);
-  const totalDebt = unpaid.reduce((s,x) => s + x.total, 0);
-  
-  let msg = `Hola *${client.name}* 👋\n\n`;
-  if(totalDebt > 0) {
-    msg += `🔴 Tu balance pendiente en *La Pulpería El Choco* es:\n`;
-    msg += `*RD$${totalDebt.toLocaleString('es-DO', {minimumFractionDigits:2})}*\n\n`;
-    msg += `📋 Detalle:\n`;
-    unpaid.forEach(s => {
-      msg += `• ${s.date.split('T')[0]} — RD$${s.total.toLocaleString('es-DO', {minimumFractionDigits:2})}\n`;
-    });
-    msg += `\n💳 Puedes pagar por transferencia:\n*${BUSINESS_BANK}*\n`;
-  } else {
-    msg += `✅ Estás *al día* con nosotros. ¡Gracias!\n`;
-  }
-  msg += `\nCualquier duda escríbenos al: *${BUSINESS_PHONE}*`;
-  
-  const url = `https://wa.me/${fullPhone}?text=${encodeURIComponent(msg)}`;
-  window.open(url, '_blank');
-}
-
-function sendWhatsAppToAll() {
-  const clients = data.clients.filter(c => c.phone && c.phone.replace(/\D/g,'').length >= 7);
-  if(clients.length === 0) { alert('No hay clientes con teléfono registrado.'); return; }
-  if(!confirm(\`¿Enviar estado de cuenta a \${clients.length} cliente(s) con WhatsApp?\`)) return;
-  
-  let i = 0;
-  function sendNext() {
-    if(i >= clients.length) { alert('✅ Se abrieron todos los chats. Revisa las pestañas.'); return; }
-    sendWhatsAppToClient(clients[i]);
-    i++;
-    setTimeout(sendNext, 1500);
-  }
-  sendNext();
-}
-
-function sendWhatsAppOnRegister(client) {
-  if(!client || !client.phone) return;
-  const phone = client.phone.replace(/\D/g,'');
-  if(phone.length < 7) return;
-  const fullPhone = phone.startsWith('1') ? phone : '1' + phone;
-  
-  const unpaid = data.sales.filter(s => s.clientId == client.id && !s.paid);
-  const totalDebt = unpaid.reduce((s,x) => s + x.total, 0);
-  
-  let msg = `¡Hola *${client.name}*! 👋 Bienvenido a *La Pulpería El Choco* 🏪\n\n`;
-  msg += `Tu cuenta ha sido creada exitosamente.\n\n`;
-  
-  if(totalDebt > 0) {
-    msg += `🔴 Tienes un balance pendiente de *RD$${totalDebt.toLocaleString('es-DO', {minimumFractionDigits:2})}*\n\n`;
-    msg += `💳 Para pagar por transferencia:\n*${BUSINESS_BANK}*\n\n`;
-  } else {
-    msg += `✅ No tienes deudas pendientes. ¡Gracias!\n\n`;
-  }
-  msg += `Puedes ver tu cuenta en cualquier momento desde la tienda.`;
-  
-  const url = `https://wa.me/${fullPhone}?text=${encodeURIComponent(msg)}`;
-  window.open(url, '_blank');
-}
-
-function logoutClientAccount() {
-  loggedClient = null;
-  selectedClientForLogin = null;
-  localStorage.removeItem('client_session');
-  document.getElementById('acc-search-name') && (document.getElementById('acc-search-name').value = '');
-  accShow('acc-welcome');
-}
-
-function tryAutoLogin() {
-  const session = JSON.parse(localStorage.getItem('client_session') || 'null');
-  if(session && session.id) {
-    const client = data.clients.find(c => c.id === session.id);
-    if(client) { loggedClient = client; }
-  }
-}
-
-function onAccountTabOpen() {
-  setupRegisterValidation();
-  if(loggedClient) { showClientDashboard(); }
-  else { accShow('acc-welcome'); }
-}
-
-function prefillCheckoutIfLogged() {
-  if(!loggedClient) return;
-  const sel = document.getElementById('client-select-existing');
-  if(!sel) return;
-  const opt = Array.from(sel.options).find(o => o.value == loggedClient.id);
-  if(opt) { sel.value = loggedClient.id; toggleNewClientFields(); }
-}
-
-function showLoginForm() { accShow('acc-welcome'); }
-function showRegisterForm() { accShow('acc-register'); setupRegisterValidation(); }
-function loginClientAccount() { accShow('acc-hasaccount'); }
-function checkClientAccount() { loginClientAccount(); }
 
 // ============================================================================
 // ======================= LÓGICA DEL ADMINISTRADOR ===========================
@@ -1083,8 +748,7 @@ function deleteProduct(id){ if(!confirm('¿Eliminar producto?')) return; data.pr
 
 function openRecipeModal(id){ document.getElementById('mr-title').textContent = id ? 'Editar Receta' : 'Nueva Receta'; document.getElementById('r-edit-id').value = id||''; document.getElementById('recipe-ingredients').innerHTML=''; if(id){ const r=data.recipes.find(x=>x.id==id); if(!r) return; document.getElementById('r-name').value=r.name; document.getElementById('r-emoji').value=r.emoji; document.getElementById('r-price').value=r.price; (r.ingredients||[]).forEach(ing=>addIngredientRow(ing.name,ing.qty||1,ing.cost)); } else { ['r-name','r-emoji','r-price'].forEach(x=>document.getElementById(x).value=''); addIngredientRow(); } calcRecipeCost(); openModal('modal-recipe'); }
 function addIngredientRow(name='',qty=1,cost=''){ const wrap=document.getElementById('recipe-ingredients'); const row=document.createElement('div'); row.className='ing-row'; row.innerHTML=`<input placeholder="Ingrediente" class="ing-name" value="${name}" oninput="calcRecipeCost()"><input type="number" placeholder="1" class="ing-qty" value="${qty}" min="0.01" step="0.01" oninput="calcRecipeCost()"><input type="number" placeholder="Costo" class="ing-cost" value="${cost}" oninput="calcRecipeCost()"><button class="qty-btn" onclick="this.closest('.ing-row').remove();calcRecipeCost()">×</button>`; wrap.appendChild(row); }
-function calcRecipeCost(){ let total=0; document.querySelectorAll('.ing-name').forEach((n,i)=>{ const q=parseFloat(document.querySelectorAll('.ing-qty')[i]?.value)||1; const c=parseFloat(document.querySelectorAll('.ing-cost')[i]?.value)||0; if(n.value.trim()) total+=q*c; }); const price=parseFloat(document.getElementById('r-price').value)||0; const gain=price-total, margin=price>0?((gain/price)*100).toFixed(0):0; document.getElementById('recipe-cost-disp').textContent=fmt(total); document.getElementById('recipe-profit-disp').textContent=fmt(gain); const mel=document.getElementById('recipe-margin-disp'); mel.textContent=margin+'%'; mel.className='fw-bold '+(margin>40?'text-green':margin>20?'text-yellow':'text-red'); }
-document.getElementById('r-price').addEventListener('input',calcRecipeCost);
+function calcRecipeCost(){ let total=0; document.querySelectorAll('.ing-name').forEach((n,i)=>{ const q=parseFloat(document.querySelectorAll('.ing-qty')[i]?.value)||1; const c=parseFloat(document.querySelectorAll('.ing-cost')[i]?.value)||0; if(n.value.trim()) total+=q*c; }); const price=parseFloat(document.getElementById('r-price').value)||0; const gain=price-total, margin=price>0?((gain/price)*100).toFixed(0):0; document.getElementById('recipe-cost-disp').textContent=fmt(total); document.getElementById('recipe-profit-disp').textContent=fmt(gain); }
 function saveRecipe(){ const name=document.getElementById('r-name').value.trim(); if(!name) return alert('Nombre requerido'); const ingredients=[]; let totalCost=0; document.querySelectorAll('.ing-name').forEach((n,i)=>{ const q=parseFloat(document.querySelectorAll('.ing-qty')[i]?.value)||1; const c=parseFloat(document.querySelectorAll('.ing-cost')[i]?.value)||0; if(n.value.trim()){ ingredients.push({name:n.value.trim(),qty:q,cost:c}); totalCost+=q*c; } }); const editId=document.getElementById('r-edit-id').value; const obj={name,emoji:document.getElementById('r-emoji').value||'🥪', price:parseFloat(document.getElementById('r-price').value)||0, cost:totalCost,ingredients,type:'recipe',stock:9999}; if(editId){ const i=data.recipes.findIndex(r=>r.id==editId); if(i>-1) data.recipes[i]={...data.recipes[i],...obj}; } else data.recipes.push({id:newId(),...obj}); save(); closeModal('modal-recipe'); renderInventory(); renderPosScreen(); }
 function deleteRecipe(id){ if(!confirm('¿Eliminar receta?')) return; data.recipes=data.recipes.filter(r=>r.id!=id); save(); renderInventory(); renderPosScreen(); }
 
@@ -1135,9 +799,7 @@ function notifyOrderReady(id) { const order = data.onlineOrders.find(o => o.id =
 function openApproveWeb(id) { 
   const order = data.onlineOrders.find(o => o.id === id); if(!order) return; 
   document.getElementById('aw-order-id').value = id; 
-  
   const payLabelStr = {inmediato:'💵 Efectivo',transferencia:'🏦 Transf.',credito:'📅 Crédito'}[order.payType] || order.payType;
-
   document.getElementById('aw-details').innerHTML = `
     <div style="padding:10px; background:var(--surface2); border-radius:8px; border:1px solid var(--accent);">
       <strong>Cliente:</strong> ${order.clientName} (${order.clientPhone})<br>
@@ -1146,19 +808,11 @@ function openApproveWeb(id) {
       <strong>Pago Deseado:</strong> <span class="text-green">${payLabelStr}</span>
     </div>
   `; 
-  
   const sel = document.getElementById('aw-client'); 
   sel.innerHTML = '<option value="">— Dejar como "Al Contado" —</option>'; 
-  sel.innerHTML += '<option value="NEW">➕ Crear como NUEVO CLIENTE</option>'; 
   data.clients.forEach(c => sel.innerHTML += `<option value="${c.id}">${c.name} (${c.phone||''})</option>`); 
-  
-  // Pre-seleccionar cliente
   if(order.clientId) { sel.value = order.clientId; } 
-  else { sel.value = "NEW"; }
-
-  // Pre-seleccionar pago
   document.getElementById('aw-payment').value = order.payType || 'inmediato';
-
   openModal('modal-approve-web'); 
 }
 
@@ -1166,19 +820,9 @@ function confirmWebOrder() {
   const id = parseInt(document.getElementById('aw-order-id').value); 
   const orderIndex = data.onlineOrders.findIndex(o => o.id === id); if(orderIndex === -1) return; 
   const order = data.onlineOrders[orderIndex]; 
-  
   const clientSelection = document.getElementById('aw-client').value;
-  let clientId = null;
-  let clientName = order.clientName + " (Web)";
-
-  if(clientSelection === "NEW") {
-    clientId = newId();
-    clientName = order.clientName;
-    data.clients.push({id: clientId, name: clientName, phone: order.clientPhone});
-  } else if(clientSelection !== "") {
-    clientId = parseInt(clientSelection);
-    clientName = data.clients.find(c=>c.id===clientId).name;
-  }
+  let clientId = clientSelection ? parseInt(clientSelection) : null;
+  let clientName = clientId ? data.clients.find(c=>c.id===clientId).name : "Al Contado";
   
   const payType = document.getElementById('aw-payment').value; 
   const sale = { id: newId(), date: new Date().toISOString(), clientId: clientId, clientName: clientName, items: order.items, total: order.total, payType: payType, creditDays: payType==='credito5'? 5 : payType==='credito'? 30 : 0, dueDate: payType==='credito5'? new Date(Date.now() + 5*24*60*60*1000).toISOString().split('T')[0] : payType==='credito'? new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0] : null, paid: payType !== 'credito5' && payType !== 'credito' }; 
@@ -1197,10 +841,31 @@ function savePurchase(){ const item=document.getElementById('pu-item').value.tri
 function renderPurchases(){ const tbody=document.getElementById('purchases-body'); const sorted=[...data.purchases].sort((a,b)=>b.date.localeCompare(a.date)); tbody.innerHTML=sorted.map(p=>`<tr><td style="font-size:.78rem">${dateStr(p.date)}</td><td><strong>${p.item}</strong></td><td>${p.cat||'—'}</td><td>${p.qty}</td><td>${fmt(p.cost)}</td><td class="text-yellow">${fmt(p.total)}</td><td class="text-muted">${p.supplier||'—'}</td><td><button class="btn btn-danger btn-sm" onclick="deletePurchase(${p.id})">🗑️</button></td></tr>`).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:24px">Sin compras</td></tr>'; }
 function deletePurchase(id){ if(!confirm('¿Eliminar compra?')) return; data.purchases=data.purchases.filter(p=>p.id!=id); save(); renderPurchases(); }
 
-function openClientModal(id){ document.getElementById('mc-title').textContent = id ? 'Editar Cliente' : 'Nuevo Cliente'; document.getElementById('c-edit-id').value = id || ''; if(id) { const c = data.clients.find(x => x.id == id); if(c){ document.getElementById('c-name').value = c.name; document.getElementById('c-phone').value = c.phone || ''; } } else { document.getElementById('c-name').value = ''; document.getElementById('c-phone').value = ''; } openModal('modal-client'); }
-function saveClient(){ const name = document.getElementById('c-name').value.trim(); if(!name) return alert('Nombre requerido'); const editId = document.getElementById('c-edit-id').value; if(editId) { const idx = data.clients.findIndex(c => c.id == editId); if(idx > -1) { data.clients[idx].name = name; data.clients[idx].phone = document.getElementById('c-phone').value; data.sales.forEach(s => { if(s.clientId == editId) s.clientName = name; }); } } else { data.clients.push({id:newId(),name,phone:document.getElementById('c-phone').value}); } save(); closeModal('modal-client'); refreshAdminViews(); }
+function openClientModal(id){ document.getElementById('mc-title').textContent = id ? 'Editar Cliente' : 'Nuevo Cliente'; document.getElementById('c-edit-id').value = id || ''; if(id) { const c = data.clients.find(x => x.id == id); if(c){ document.getElementById('c-name').value = c.name; document.getElementById('c-phone').value = c.phone || ''; document.getElementById('c-pin').value = c.pin || ''; } } else { document.getElementById('c-name').value = ''; document.getElementById('c-phone').value = ''; document.getElementById('c-pin').value = ''; } openModal('modal-client'); }
+function saveClient(){ const name = document.getElementById('c-name').value.trim(); if(!name) return alert('Nombre requerido'); const editId = document.getElementById('c-edit-id').value; const pin = document.getElementById('c-pin').value.trim(); if(editId) { const idx = data.clients.findIndex(c => c.id == editId); if(idx > -1) { data.clients[idx].name = name; data.clients[idx].phone = document.getElementById('c-phone').value; data.clients[idx].pin = pin; data.sales.forEach(s => { if(s.clientId == editId) s.clientName = name; }); } } else { data.clients.push({id:newId(),name,phone:document.getElementById('c-phone').value, pin: pin}); } save(); closeModal('modal-client'); refreshAdminViews(); }
 function deleteClient(id) { if(!confirm('¿Borrar cliente?')) return; data.clients = data.clients.filter(c => c.id != id); data.sales.forEach(s => { if(s.clientId == id) { s.clientId = null; s.clientName = 'Al Contado'; } }); save(); refreshAdminViews(); }
+
 function renderClients(){ const wrap=document.getElementById('clients-grid'); if(!data.clients.length){wrap.innerHTML='<div class="card" style="text-align:center;padding:32px;color:var(--muted)">Sin clientes registrados.</div>';return;} wrap.innerHTML=data.clients.map(c=>{ const cs=data.sales.filter(s=> s.clientId==c.id); const pendingSales=cs.filter(s=>!s.paid); const totalDebt=pendingSales.reduce((s,x)=>s+x.total,0); const paidTotal=cs.filter(s=>s.paid).reduce((s,x)=>s+x.total,0); return `<div class="card" style="margin-bottom:0"><div class="flex-between mb-8"><span class="fw-bold">👤 ${c.name}</span>${c.phone?`<span class="text-muted" style="font-size:.8rem">📞 ${c.phone}</span>`:''}</div><div style="display:flex; gap:6px; margin-bottom: 12px;"><button class="btn btn-edit btn-sm" onclick="openClientModal(${c.id})">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteClient(${c.id})">🗑️</button></div><div class="flex-between mb-8"><span class="text-muted" style="font-size:.8rem">Pagado</span><span class="text-green">${fmt(paidTotal)}</span></div><div class="flex-between"><span style="font-size:.85rem;font-weight:600">DEUDA TOTAL</span><span class="fw-bold ${totalDebt>0?'text-red':'text-green'}" style="font-size:1.1rem">${fmt(totalDebt)}</span></div></div>`; }).join(''); }
+
+// === COBRO MASIVO WHATSAPP ===
+function bulkWhatsAppReminders() {
+    const debtors = data.clients.map(c => {
+        const debt = data.sales.filter(s => s.clientId == c.id && !s.paid).reduce((sum, s) => sum + s.total, 0);
+        return { ...c, debt };
+    }).filter(c => c.debt > 0 && c.phone);
+
+    if(debtors.length === 0) return alert('No hay clientes con deudas que tengan un número de teléfono registrado.');
+
+    const allow = confirm(`Atención: Se intentarán abrir ${debtors.length} pestañas de WhatsApp al mismo tiempo.\n\nAsegúrate de que tu navegador permita "Ventanas Emergentes (Pop-ups)". ¿Deseas continuar?`);
+    if(!allow) return;
+
+    debtors.forEach(d => {
+        let phone = d.phone.replace(/\D/g, '');
+        if(!phone) return;
+        let msg = `Hola *${d.name}* 👋\n\nTienes un balance pendiente con nosotros de *${fmt(d.debt)}*.\n\nPara ponerte al día, puedes transferir a:\n🏦 Banco Popular (Cuenta Corriente)\n🔢 Cuenta: *852775865*\n📱 O a este número: *809 886 3186*\n\n¡Gracias por preferirnos!`;
+        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+    });
+}
 
 function markPaid(saleId){ const s=data.sales.find(x=>x.id==saleId); if(s){s.paid=true;s.paidDate=new Date().toISOString();} save(); refreshAdminViews(); }
 function payLabel(pt){ return {inmediato:'Efectivo',transferencia:'Transf.',credito5:'Fiado',credito:'Fiado'}[pt]||pt; }
@@ -1227,19 +892,11 @@ function importData(event){
         data=imported; 
         if(!data.onlineOrders) data.onlineOrders=[];
         localStorage.setItem('negocio_data', JSON.stringify(data));
-        // Subir INMEDIATAMENTE a la nube sin esperar
         updateCloudStatus('⬆️ Subiendo backup...', 'var(--accent)');
         try {
-          await fetch(SCRIPT_URL, { 
-            method: 'POST', 
-            mode: 'no-cors', 
-            headers: { 'Content-Type': 'text/plain' }, 
-            body: JSON.stringify(data) 
-          });
+          await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(data) });
           updateCloudStatus('🟢 Guardado en nube', 'var(--green)');
-        } catch(err) {
-          updateCloudStatus('⚠️ Solo local', 'var(--accent)');
-        }
+        } catch(err) { updateCloudStatus('⚠️ Solo local', 'var(--accent)'); }
         alert("✅ Datos cargados y subidos a la nube."); 
         location.reload(); 
       }else alert("Archivo inválido."); 
@@ -1247,22 +904,6 @@ function importData(event){
   }; 
   reader.readAsText(file); 
 }
-</script>
-
-<script>
-// Init — runs after all HTML is loaded
-(function() {
-  var href = window.location.href + window.location.search;
-  if(href.indexOf('tienda') !== -1) {
-    document.getElementById('landing-wrapper').style.display = 'none';
-    appMode = 'client';
-    document.getElementById('client-wrapper').style.display = 'block';
-    loadFromCloud().then(function() { 
-      tryAutoLogin();
-      renderClientCatalog();
-    });
-  }
-})();
 </script>
 </body>
 </html>
