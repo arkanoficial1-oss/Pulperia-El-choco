@@ -57,7 +57,7 @@
   .chart-bar { display:flex; align-items:flex-end; gap:8px; height:120px; } .bar-wrap { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; } .bar { width:100%; background:var(--accent); border-radius:4px 4px 0 0; min-height:4px; }
   #client-wrapper { padding-bottom: 80px; }
   #client-wrapper header { background:var(--surface); border-bottom:1px solid var(--border); padding:20px; text-align:center; position:sticky; top:0; z-index:100; display:flex; flex-direction:column; align-items:center; }
-  .client-page { display:none; padding:24px; max-width:600px; margin:0 auto; } .client-page.active { display:block; }
+  .client-page { display:none; padding:24px; max-width:950px; margin:0 auto; } .client-page.active { display:block; }
   .client-nav { position:fixed; bottom:0; left:0; right:0; background:var(--surface); border-top:1px solid var(--border); display:flex; justify-content:space-around; padding:12px 0; z-index:100; }
   .c-nav-item { background:none; border:none; color:var(--muted); display:flex; flex-direction:column; align-items:center; gap:4px; font-family:'DM Sans',sans-serif; font-size:.75rem; cursor:pointer; width:33%; } .c-nav-item.active { color:var(--accent); } .c-nav-item .icon { font-size:1.4rem; position:relative; }
   .c-cart-badge { position:absolute; top:-5px; right:-10px; background:var(--accent2); color:#fff; font-size:.6rem; font-weight:bold; padding:2px 6px; border-radius:999px; display:none; }
@@ -101,12 +101,31 @@
     </div>
 
     <div id="client-dashboard-view" style="display:none;">
-      <div class="card" style="text-align:center;">
-        <div style="font-size:2rem; margin-bottom:8px;">👋</div><h2 id="dash-name" style="color:var(--accent); margin-bottom:4px;">Hola</h2><p id="dash-phone" class="text-muted" style="font-size:0.85rem; margin-bottom:16px;"></p>
+      
+      <div class="flex-between mb-16" style="background:var(--surface2); padding:12px 20px; border-radius:16px; border:1px solid var(--border);">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="font-size:2rem;">👋</div>
+          <div style="text-align:left;">
+            <div id="dash-name" style="color:var(--accent); font-weight:800; font-size:1.1rem; font-family:'Syne',sans-serif;">Hola</div>
+            <div id="dash-phone" class="text-muted" style="font-size:0.8rem;"></div>
+          </div>
+        </div>
         <button class="btn btn-ghost btn-sm" onclick="logoutClient()">Cerrar Sesión</button>
       </div>
-      <h2 class="section-title mt-10">💰 Mi Estado de Cuenta</h2><div id="client-account-result">Cargando...</div>
-      <h2 class="section-title" style="margin-top:24px;">📦 Mis Pedidos Web Pendientes</h2><div id="client-web-orders"></div>
+
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:24px; align-items:start; margin-top:20px;">
+        
+        <div>
+          <h2 class="section-title" style="margin-top:0;">📦 Mis Pedidos Web</h2>
+          <div id="client-web-orders"></div>
+        </div>
+
+        <div>
+          <h2 class="section-title" style="margin-top:0;">💰 Mi Estado de Cuenta</h2>
+          <div id="client-account-result">Cargando...</div>
+        </div>
+
+      </div>
     </div>
   </div>
 
@@ -422,7 +441,19 @@ function refreshClientDashboard() {
     document.getElementById('dash-phone').textContent = loggedInClient.phone || ''; 
     const res = document.getElementById('client-account-result'), sls = data.sales.filter(s => String(s.clientId) === String(loggedInClient.id) && !s.paid), td = sls.reduce((s, x) => s + x.total, 0); 
     if(td > 0) { 
-        let ht = `<div class="debt-card"><div style="font-size:1.5rem">🔴</div><h3 style="color:var(--accent2); margin:8px 0;">Balance Pendiente</h3><div style="font-size:2rem; font-weight:800;">${fmt(td)}</div><p style="font-size:0.85rem; margin-top:12px; font-weight:bold;">Para pagar, realiza una transferencia a:</p><div style="background:#00000033; padding:10px; border-radius:8px; margin-top:8px; text-align:left; font-size:0.9rem;">🏦 <strong>Banco Popular</strong> (Corriente)<br>🔢 Cuenta: <strong>852775865</strong><br>📱 WhatsApp: <strong>809 886 3186</strong></div><div style="text-align:left; margin-top:12px; background:#00000033; padding:10px; border-radius:8px;">`; 
+        let ht = `<div class="debt-card"><div style="font-size:1.5rem">🔴</div><h3 style="color:var(--accent2); margin:8px 0;">Balance Pendiente</h3><div style="font-size:2rem; font-weight:800;">${fmt(td)}</div><p style="font-size:0.85rem; margin-top:12px; font-weight:bold;">Para pagar, realiza una transferencia a:</p>
+        <div style="background:#00000033; padding:12px; border-radius:8px; margin-top:8px; text-align:left; font-size:0.85rem;">
+            🏦 <strong>Banco Popular</strong> (Corriente)<br>
+            <div class="flex-between" style="background:#ffffff11; padding:6px 10px; border-radius:6px; margin:6px 0;">
+                <span>🔢 Cuenta: <strong>852775865</strong></span>
+                <button onclick="navigator.clipboard.writeText('852775865'); this.innerHTML='✅'; setTimeout(()=>this.innerHTML='📋', 2000);" style="background:none; border:none; cursor:pointer; font-size:1.2rem; margin-left:8px;" title="Copiar cuenta">📋</button>
+            </div>
+            <div class="flex-between" style="background:#ffffff11; padding:6px 10px; border-radius:6px; margin:6px 0;">
+                <span>📱 WhatsApp: <strong>8098863186</strong></span>
+                <button onclick="navigator.clipboard.writeText('8098863186'); this.innerHTML='✅'; setTimeout(()=>this.innerHTML='📋', 2000);" style="background:none; border:none; cursor:pointer; font-size:1.2rem; margin-left:8px;" title="Copiar teléfono">📋</button>
+            </div>
+        </div>
+        <div style="text-align:left; margin-top:12px; background:#00000033; padding:10px; border-radius:8px;">`; 
         sls.forEach(s => { 
             const it = s.items.map(i=>`• ${i.qty}x ${i.name}`).join('<br>'); 
             ht += `<div style="font-size:0.85rem; border-bottom:1px solid #ffffff11; padding:10px 0;"><div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span style="color:var(--muted)">📅 ${s.date.split('T')[0]}</span><span style="font-weight:bold; color:var(--accent2);">${fmt(s.total)}</span></div><div style="color:var(--text); font-size:0.8rem; line-height:1.4;">${it}</div></div>`; 
