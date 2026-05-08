@@ -531,30 +531,30 @@ function clearPosCart(){posCart=[];renderPosCart();}
 function renderPosCart(){ const w=document.getElementById('admin-cart-items'); if(!posCart.length){w.innerHTML='<p class="text-muted" style="padding:16px 0;text-align:center;">Toca un producto →</p>'; document.getElementById('admin-cart-subtotal').textContent='RD$0.00'; document.getElementById('admin-cart-total').textContent='RD$0.00'; return;} w.innerHTML=posCart.map((i,idx)=>`<div class="cart-item"><span style="font-size:1.2rem">${i.emoji}</span><span style="flex:1;font-size:.875rem">${i.name}</span><div class="cart-qty"><button class="qty-btn" onclick="updatePosCartQty(${idx},-1)">−</button><span>${i.qty}</span><button class="qty-btn" onclick="updatePosCartQty(${idx},+1)">+</button></div><span class="text-yellow" style="min-width:68px;text-align:right;font-size:.85rem">${fmt(i.price*i.qty)}</span></div>`).join(''); const t=posCart.reduce((s,i)=>s+i.price*i.qty,0); document.getElementById('admin-cart-subtotal').textContent=fmt(t); document.getElementById('admin-cart-total').textContent=fmt(t); }
 function completePosSale(){ if(!posCart.length) return alert('Vacío'); const pt=document.getElementById('admin-pos-payment').value; let cd=0, dd=null; if(pt==='credito5') cd=5; if(pt==='credito') cd=parseInt(document.getElementById('admin-pos-credit-days').value)||5; if(cd>0){ const d=new Date(); d.setDate(d.getDate()+cd); dd=d.toISOString().split('T')[0]; } const rId=document.getElementById('admin-pos-client').value, cId=rId?parseInt(rId):null, c=cId?data.clients.find(x=>x.id===cId):null, t=posCart.reduce((s,i)=>s+i.price*i.qty,0), s={id:newId(),date:new Date().toISOString(), clientId: cId, clientName: c?c.name:'Al Contado', items:posCart.map(i=>({...i})),total:t,payType:pt,creditDays:cd,dueDate:dd, paid:pt==='inmediato'||pt==='transferencia'}; s.items.forEach(i=>{ if(i.type!=='recipe'){const p=data.products.find(x=>x.id==i.id);if(p) p.stock=Math.max(0,p.stock-i.qty);} }); data.sales.push(s); save(); posCart=[]; renderPosCart(); updateAlertBadge(); alert(`✅ Venta a ${s.clientName}\nTotal: ${fmt(t)}`); }
 
-// === MODIFICACIÓN: ADMIN WEB ORDERS (ESTADOS Y WHATSAPP) ===
-function markOrderPreparing(id) {
+// === MODIFICACIÓN: ADMIN WEB ORDERS (DROPDOWN DE ESTADOS Y WHATSAPP) ===
+function changeOrderStatus(id, newStatus) {
     const o = data.onlineOrders.find(x => x.id === id);
     if(!o) return;
-    o.status = 'preparing';
-    save(); // Sube al JSON de la tienda
-    renderWebOrders();
+    
+    o.status = newStatus;
+    save(); // Sube al JSON de la tienda para que el cliente lo vea
+    renderWebOrders(); // Cambia el color del botón instantáneamente
+    
+    // Asignar el texto exacto para Google Sheets
+    let sheetStatus = 'PENDIENTE';
+    if(newStatus === 'preparing') sheetStatus = 'PREPARANDO';
+    else if(newStatus === 'ready') sheetStatus = 'LISTO';
+    
     // Forzar actualización inmediata en las celdas de tu Google Sheets
-    try { fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'updateStatus', id: id, status: 'PREPARANDO' }) }); } catch(e){}
-}
+    try { fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'updateStatus', id: id, status: sheetStatus }) }); } catch(e){}
 
-function notifyOrderReady(id) { 
-    const o = data.onlineOrders.find(x => x.id === id); 
-    if(!o) return;
-    o.status = 'ready';
-    save(); // Sube al JSON de la tienda
-    renderWebOrders();
-    // Forzar actualización inmediata en las celdas de tu Google Sheets
-    try { fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'updateStatus', id: id, status: 'LISTO' }) }); } catch(e){}
-
-    if(!o.clientPhone) return alert("El cliente no tiene teléfono guardado, pero el pedido ya figura como 'Listo'."); 
-    let m = `Hola *${o.clientName}* 👋\n\n¡Tu pedido ya está LISTO! 🎉\n\nTotal a pagar: ${fmt(o.total)}\n\nTe esperamos.`; 
-    let ph = o.clientPhone.replace(/\D/g,''); 
-    window.open(`https://wa.me/${ph}?text=${encodeURIComponent(m)}`, '_blank'); 
+    // Si cambió a Listo, lanza el aviso de WhatsApp
+    if(newStatus === 'ready') {
+        if(!o.clientPhone) return alert("El cliente no tiene teléfono guardado, pero el pedido figura como 'Listo'."); 
+        let m = `Hola *${o.clientName}* 👋\n\n¡Tu pedido ya está LISTO! 🎉\n\nTotal a pagar: ${fmt(o.total)}\n\nTe esperamos.`; 
+        let ph = o.clientPhone.replace(/\D/g,''); 
+        window.open(`https://wa.me/${ph}?text=${encodeURIComponent(m)}`, '_blank'); 
+    }
 }
 
 function renderWebOrders() { 
@@ -567,10 +567,16 @@ function renderWebOrders() {
         const imgBtn = x.receipt ? `<br><a href="${x.receipt}" target="_blank" style="color:var(--blue); font-size:0.75rem; text-decoration:underline; display:inline-block; margin-top:4px;">🖼️ Ver Comprobante</a>` : '';
         
         const st = x.status || 'pending';
-        let actionBtns = '';
-        if(st === 'pending') actionBtns += `<button class="btn btn-edit btn-sm" onclick="markOrderPreparing(${x.id})" title="Marcar en preparación">🍳 Preparar</button> `;
-        else if(st === 'preparing') actionBtns += `<button class="btn btn-whatsapp btn-sm" onclick="notifyOrderReady(${x.id})" title="Avisar por WhatsApp">🔔 Listo</button> `;
-        else if(st === 'ready') actionBtns += `<span class="badge badge-green" style="margin-right:8px;">Listo ✅</span>`;
+        // Determinar el color del botón desplegable según el estado
+        let selectColor = 'background:var(--surface2); color:var(--text);'; // Pendiente (Gris)
+        if(st === 'preparing') selectColor = 'background:var(--accent); color:#000;'; // Preparando (Amarillo)
+        else if(st === 'ready') selectColor = 'background:var(--green); color:#000;'; // Listo (Verde)
+        
+        let statusDropdown = `<select class="btn btn-sm" style="${selectColor} font-weight:bold; border:1px solid var(--border); margin-right:6px; cursor:pointer;" onchange="changeOrderStatus(${x.id}, this.value)">
+            <option value="pending" ${st==='pending'?'selected':''} style="background:var(--surface2); color:var(--text);">⏳ Pendiente</option>
+            <option value="preparing" ${st==='preparing'?'selected':''} style="background:var(--surface2); color:var(--text);">🍳 Preparando</option>
+            <option value="ready" ${st==='ready'?'selected':''} style="background:var(--surface2); color:var(--text);">✅ Listo</option>
+        </select>`;
 
         return `<tr style="background:#f7b7310a">
             <td style="font-size:.78rem">${dateStr(x.date)}</td>
@@ -578,7 +584,7 @@ function renderWebOrders() {
             <td style="font-size:.78rem">${x.items.map(i=>`${i.qty}x ${i.emoji} ${i.name}`).join('<br>')}</td>
             <td><div class="text-yellow fw-bold">${fmt(x.total)}</div><div style="font-size:0.75rem; color:var(--muted);">${pl}</div>${imgBtn}</td>
             <td style="white-space:nowrap; display:flex; gap:6px; align-items:center;">
-                ${actionBtns}
+                ${statusDropdown}
                 <button class="btn btn-success btn-sm" onclick="openApproveWeb(${x.id})" title="Cobrar pedido">✅ Cobrar</button>
                 <button class="btn btn-danger btn-sm" onclick="deleteWebOrder(${x.id})" title="Cancelar pedido">🗑️</button>
             </td>
