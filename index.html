@@ -537,18 +537,19 @@ function changeOrderStatus(id, newStatus) {
     if(!o) return;
     
     o.status = newStatus;
-    save(); // Sube al JSON de la tienda para que el cliente lo vea
-    renderWebOrders(); // Cambia el color del botón instantáneamente
     
-    // Asignar el texto exacto para Google Sheets
-    let sheetStatus = 'PENDIENTE';
-    if(newStatus === 'preparing') sheetStatus = 'PREPARANDO';
-    else if(newStatus === 'ready') sheetStatus = 'LISTO';
+    // 1. Guardar localmente y cambiar el color de la página del admin al instante
+    localStorage.setItem('negocio_data', JSON.stringify(data));
+    renderWebOrders(); 
     
-    // Forzar actualización inmediata en las celdas de tu Google Sheets
-    try { fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'updateStatus', id: id, status: sheetStatus }) }); } catch(e){}
+    // 2. SUBIR INMEDIATAMENTE toda la base de datos oculta a Google Sheets 
+    // (Esto ignora los 2 segundos de espera y garantiza que el cliente descargue el nuevo estado)
+    updateCloudStatus('🔄 Subiendo estado...', 'var(--accent)');
+    fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(data) })
+        .then(() => updateCloudStatus('🟢 Guardado', 'var(--green)'))
+        .catch(() => updateCloudStatus('🔴 Error al subir', 'var(--accent2)'));
 
-    // Si cambió a Listo, lanza el aviso de WhatsApp
+    // 3. Lanzar el WhatsApp si el pedido pasó a Listo
     if(newStatus === 'ready') {
         if(!o.clientPhone) return alert("El cliente no tiene teléfono guardado, pero el pedido figura como 'Listo'."); 
         let m = `Hola *${o.clientName}* 👋\n\n¡Tu pedido ya está LISTO! 🎉\n\nTotal a pagar: ${fmt(o.total)}\n\nTe esperamos.`; 
