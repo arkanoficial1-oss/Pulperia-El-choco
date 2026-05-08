@@ -161,114 +161,20 @@
         </select>
       </div>
       
-      <div id="checkout-login-warning" style="display:none; background:#f7b73122; border:2px solid var(--accent); border-radius:12px; padding:16px; text-align:center; margin-top:10px;">
-        <p style="font-size:0.95rem; font-weight:700; color:var(--accent); margin-bottom:8px;">👤 Debes entrar a tu cuenta primero</p>
-        <p style="font-size:0.82rem; color:var(--muted); margin-bottom:12px;">Para enviar tu pedido necesitas estar identificado.</p>
-        <button onclick="goToAccountFromCart()" class="btn btn-primary w100" style="padding:12px; border-radius:10px;">Entrar / Crear cuenta →</button>
-      </div>
-      <button id="checkout-btn" class="btn btn-primary w100" style="padding:16px; font-size:1.1rem; border-radius:12px; margin-top:10px; display:none;" onclick="sendWebOrder()">✅ Enviar Pedido al Local</button>
+      <button id="checkout-btn" class="btn btn-primary w100" style="padding:16px; font-size:1.1rem; border-radius:12px; margin-top:10px;" onclick="sendWebOrder()">✅ Enviar Pedido al Local</button>
     </div>
   </div>
 
-  <div id="client-page-account" class="client-page" style="padding:0; overflow:hidden;">
-
-    <!-- PANTALLA 1: Bienvenida animada -->
-    <div id="acc-welcome" style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:80vh; padding:24px; text-align:center; animation: fadeIn .5s ease;">
-      <div style="font-size:4rem; margin-bottom:12px; animation: bounceIn .6s ease;">👋</div>
-      <h2 style="font-family:'Syne',sans-serif; font-size:1.6rem; font-weight:800; margin-bottom:8px; color:var(--text);">¡Bienvenido!</h2>
-      <p style="color:var(--muted); font-size:0.95rem; margin-bottom:32px; line-height:1.5;">Aquí puedes ver tus pedidos,<br>tus deudas y todo tu historial.</p>
-      <button onclick="accShow('acc-hasaccount')" class="btn btn-primary w100" style="padding:16px; font-size:1.05rem; border-radius:14px; margin-bottom:12px;">
-        ✅ Sí, ya tengo cuenta
-      </button>
-      <button onclick="accShow('acc-register')" style="width:100%; padding:14px; font-size:1rem; border-radius:14px; background:var(--surface2); color:var(--text); border:none; cursor:pointer;">
-        ➕ Soy nuevo, quiero registrarme
-      </button>
+  <div id="client-page-account" class="client-page">
+    <h2 class="section-title">👤 Estado de Cuenta</h2>
+    <p style="font-size:0.85rem; color:var(--muted); margin-bottom:20px;">Ingresa tu número de teléfono registrado (solo números) para consultar si tienes balances pendientes con nosotros.</p>
+    
+    <div class="form-group">
+      <input type="tel" id="client-account-phone" placeholder="Ej: 18091234567">
     </div>
-
-    <!-- PANTALLA 2: Buscar cuenta por nombre -->
-    <div id="acc-hasaccount" style="display:none; padding:24px; animation: slideIn .3s ease;">
-      <button onclick="accShow('acc-welcome')" style="background:none;border:none;color:var(--muted);cursor:pointer;margin-bottom:16px;font-size:0.9rem;">← Volver</button>
-      <h2 style="font-family:'Syne',sans-serif; font-size:1.4rem; font-weight:800; margin-bottom:6px;">Busca tu nombre</h2>
-      <p style="color:var(--muted); font-size:0.85rem; margin-bottom:20px;">Escribe tu nombre y selecciónate de la lista.</p>
-      <div class="form-group" style="position:relative;">
-        <label style="color:var(--accent); font-weight:600; font-size:0.85rem;">👤 Tu nombre</label>
-        <input type="text" id="acc-search-name" placeholder="Ej: Juan Pérez" autocomplete="off"
-          oninput="searchClientByName(this.value)"
-          style="border:2px solid var(--accent); font-size:1rem; padding:14px; border-radius:12px;">
-        <div id="acc-search-results" style="position:absolute; left:0; right:0; background:var(--surface2); border-radius:12px; border:1px solid var(--border); max-height:200px; overflow-y:auto; z-index:99; margin-top:4px; display:none;"></div>
-      </div>
-
-      <!-- Confirmación de cliente seleccionado -->
-      <div id="acc-selected-client" style="display:none; background:var(--surface2); border-radius:14px; padding:16px; margin-top:12px; border:2px solid var(--accent);">
-        <p style="font-size:0.8rem; color:var(--muted); margin-bottom:4px;">Cliente seleccionado:</p>
-        <p id="acc-selected-name" style="font-size:1.1rem; font-weight:700; color:var(--text); margin-bottom:12px;"></p>
-        <button id="acc-confirm-btn" onclick="confirmClientLogin()" class="btn btn-primary w100" style="padding:13px; border-radius:12px;">
-          ✅ Entrar a mi cuenta
-        </button>
-      </div>
-      <div id="acc-hasaccount-msg" style="margin-top:12px; font-size:0.85rem;"></div>
-    </div>
-
-    <!-- PANTALLA 3: Registro nuevo -->
-    <div id="acc-register" style="display:none; padding:24px; animation: slideIn .3s ease;">
-      <button onclick="accShow('acc-welcome')" style="background:none;border:none;color:var(--muted);cursor:pointer;margin-bottom:16px;font-size:0.9rem;">← Volver</button>
-      <h2 style="font-family:'Syne',sans-serif; font-size:1.4rem; font-weight:800; margin-bottom:6px;">Crear cuenta</h2>
-      <p style="color:var(--muted); font-size:0.85rem; margin-bottom:20px;">Llena tus datos para registrarte.</p>
-
-      <div class="form-group">
-        <label style="color:var(--accent); font-weight:600; font-size:0.85rem;">👤 Tu nombre completo</label>
-        <input type="text" id="reg-name" placeholder="Ej: Juan Pérez" style="font-size:1rem; padding:14px; border-radius:12px;">
-        <!-- Sugerencias de coincidencia -->
-        <div id="reg-name-match" style="margin-top:8px; display:none;"></div>
-      </div>
-      <div class="form-group">
-        <label style="color:var(--accent); font-weight:600; font-size:0.85rem;">📱 Tu teléfono (WhatsApp)</label>
-        <input type="tel" id="reg-phone" placeholder="Ej: 8091234567" style="font-size:1rem; padding:14px; border-radius:12px;">
-      </div>
-
-      <div id="acc-register-msg" style="margin-bottom:12px; font-size:0.85rem;"></div>
-
-      <button id="acc-register-btn" onclick="registerClientAccount()" class="btn btn-primary w100" style="padding:14px; border-radius:12px; font-size:1rem; opacity:0.5; cursor:not-allowed;" disabled>
-        ✅ Crear mi cuenta
-      </button>
-    </div>
-
-    <!-- PANTALLA 4: Dashboard del cliente -->
-    <div id="acc-dashboard" style="display:none; animation: fadeIn .4s ease;">
-      <!-- Header -->
-      <div style="background:linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%); padding:20px 20px 16px; border-bottom:1px solid var(--border);">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-          <div>
-            <p style="font-size:0.75rem; color:var(--muted); margin-bottom:2px;">¡Hola!</p>
-            <h2 id="dash-client-name" style="font-family:'Syne',sans-serif; font-size:1.4rem; font-weight:800; color:var(--text); margin:0;"></h2>
-          </div>
-    <div style="display:flex; gap:8px;">
-            <button onclick="sendWhatsAppToClient(loggedClient)" style="background:#25D366; border:none; color:#fff; cursor:pointer; border-radius:8px; padding:6px 12px; font-size:0.8rem; font-weight:600;">
-              📲 WhatsApp
-            </button>
-            <button onclick="logoutClientAccount()" style="background:var(--surface2); border:1px solid var(--border); color:var(--muted); cursor:pointer; border-radius:8px; padding:6px 12px; font-size:0.8rem;">
-              Salir 🚪
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div style="padding:16px; overflow-y:auto; max-height:calc(100vh - 180px);">
-        <!-- Caja de deuda -->
-        <div id="dash-debt-box" style="border-radius:16px; padding:20px; margin-bottom:16px; text-align:center;"></div>
-
-        <!-- Pedido activo (si tiene) -->
-        <div id="dash-active-order" style="display:none; background:var(--surface2); border-radius:14px; padding:16px; margin-bottom:16px; border-left:4px solid var(--accent);">
-          <p style="font-size:0.8rem; color:var(--accent); font-weight:600; margin-bottom:8px;">⏳ PEDIDO EN PROCESO</p>
-          <div id="dash-active-order-detail"></div>
-        </div>
-
-        <!-- Historial -->
-        <h3 style="font-size:0.85rem; color:var(--muted); margin-bottom:10px; font-weight:600; text-transform:uppercase; letter-spacing:1px;">📋 Mis Compras</h3>
-        <div id="dash-sales-list"></div>
-      </div>
-    </div>
-
+    <button class="btn btn-primary w100" style="padding:14px; margin-bottom:20px;" onclick="checkClientAccount()">🔍 Buscar mi cuenta</button>
+    
+    <div id="client-account-result"></div>
   </div>
 
   <nav class="client-nav">
@@ -349,8 +255,7 @@
   </div>
 
   <div id="admin-page-clients" class="admin-page">
-    <div class="flex-between mb-16"><h2 class="section-title" style="margin:0">👥 Clientes</h2>
-      <button onclick="sendWhatsAppToAll()" style="background:#25D366; color:#fff; border:none; border-radius:10px; padding:10px 20px; font-size:0.9rem; font-weight:700; cursor:pointer; margin-bottom:16px; display:flex; align-items:center; gap:8px;">📲 Enviar estado de cuenta a TODOS por WhatsApp</button><button class="btn btn-primary" onclick="openClientModal()">+ Nuevo Cliente</button></div>
+    <div class="flex-between mb-16"><h2 class="section-title" style="margin:0">👥 Clientes</h2><button class="btn btn-primary" onclick="openClientModal()">+ Nuevo Cliente</button></div>
     <div id="clients-grid" class="grid2"></div>
   </div>
 
@@ -458,8 +363,7 @@ window.onload = () => {
     
     // Solo mostramos el catálogo inicialmente
     loadFromCloud().then(() => { 
-      renderClientCatalog();
-      tryAutoLogin();
+      renderClientCatalog(); 
     });
   }
 }
@@ -554,8 +458,6 @@ function allProds(){ return [...data.products,...data.recipes]; }
 // ========================= LÓGICA DEL CLIENTE ===============================
 // ============================================================================
 function showClientPage(id, el) {
-  if(id === 'account') { setTimeout(onAccountTabOpen, 50); }
-  if(id === 'cart') { setTimeout(prefillCheckoutIfLogged, 50); }
   document.querySelectorAll('.client-page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.c-nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('client-page-' + id).classList.add('active');
@@ -740,327 +642,28 @@ function startAdminPolling() {
   }, 30000);
 }
 
-// ===== SISTEMA DE CUENTAS DE CLIENTE =====
-let loggedClient = null;
-let selectedClientForLogin = null;
-
-// Animaciones CSS
-const accStyles = document.createElement('style');
-accStyles.textContent = `
-  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
-  @keyframes slideIn { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
-  @keyframes bounceIn { 0% { transform:scale(0.3); opacity:0; } 60% { transform:scale(1.1); } 100% { transform:scale(1); opacity:1; } }
-  .acc-result-item { padding:12px 14px; cursor:pointer; border-bottom:1px solid var(--border); transition:background .2s; font-size:0.95rem; }
-  .acc-result-item:hover { background:var(--accent); color:#000; }
-  .acc-result-item:last-child { border-bottom:none; }
-`;
-document.head.appendChild(accStyles);
-
-function accShow(id) {
-  ['acc-welcome','acc-hasaccount','acc-register','acc-dashboard'].forEach(v => {
-    const el = document.getElementById(v);
-    if(el) el.style.display = 'none';
-  });
-  const target = document.getElementById(id);
-  if(target) target.style.display = '';
-}
-
-function searchClientByName(val) {
-  const results = document.getElementById('acc-search-results');
-  const selected = document.getElementById('acc-selected-client');
-  if(!val || val.length < 2) { results.style.display = 'none'; selected.style.display = 'none'; selectedClientForLogin = null; return; }
+function checkClientAccount() {
+  let phone = document.getElementById('client-account-phone').value.trim().replace(/\D/g,'');
+  if(!phone) return alert('Por favor ingresa tu número.');
+  const resultBox = document.getElementById('client-account-result');
   
-  const matches = data.clients.filter(c => c.name.toLowerCase().includes(val.toLowerCase())).slice(0, 6);
-  if(matches.length === 0) { results.style.display = 'none'; return; }
+  const client = data.clients.find(c => c.phone && c.phone.replace(/\D/g,'').includes(phone));
   
-  results.innerHTML = matches.map(c => 
-    `<div class="acc-result-item" onclick="selectClientForLogin(${c.id}, '${c.name.replace(/'/g,"\'")}')">
-      👤 ${c.name}${c.phone ? ' <span style="color:var(--muted);font-size:0.75rem;">• ' + c.phone + '</span>' : ''}
-    </div>`
-  ).join('');
-  results.style.display = '';
-}
-
-function selectClientForLogin(id, name) {
-  selectedClientForLogin = data.clients.find(c => c.id === id);
-  document.getElementById('acc-search-name').value = name;
-  document.getElementById('acc-search-results').style.display = 'none';
-  document.getElementById('acc-selected-name').textContent = name;
-  document.getElementById('acc-selected-client').style.display = '';
-}
-
-function confirmClientLogin() {
-  if(!selectedClientForLogin) return;
-  loggedClient = selectedClientForLogin;
-  localStorage.setItem('client_session', JSON.stringify({id: loggedClient.id}));
-  showClientDashboard();
-  // Si venía del carrito, regresar
-  if(localStorage.getItem('cart_return')) {
-    localStorage.removeItem('cart_return');
-    setTimeout(() => showClientPage('cart', document.querySelectorAll('.c-nav-item')[1]), 1000);
-  }
-}
-
-// Validar formulario de registro en tiempo real
-function setupRegisterValidation() {
-  const nameInput = document.getElementById('reg-name');
-  const phoneInput = document.getElementById('reg-phone');
-  const btn = document.getElementById('acc-register-btn');
-  if(!nameInput || !phoneInput || !btn) return;
-  
-  function validate() {
-    const nameOk = nameInput.value.trim().length >= 2;
-    const phoneOk = phoneInput.value.trim().replace(/\D/g,'').length >= 7;
-    btn.disabled = !(nameOk && phoneOk);
-    btn.style.opacity = (nameOk && phoneOk) ? '1' : '0.5';
-    btn.style.cursor = (nameOk && phoneOk) ? 'pointer' : 'not-allowed';
-  }
-  
-  nameInput.addEventListener('input', function() {
-    validate();
-    const val = this.value.trim();
-    if(val.length < 2) { document.getElementById('reg-name-match').style.display = 'none'; return; }
-    // Buscar coincidencias de nombre
-    const matches = data.clients.filter(c => c.name.toLowerCase().includes(val.toLowerCase()) && (!c.phone || c.phone === '')).slice(0,3);
-    const matchBox = document.getElementById('reg-name-match');
-    if(matches.length > 0) {
-      matchBox.style.display = '';
-      matchBox.innerHTML = '<p style="font-size:0.78rem; color:var(--accent); margin-bottom:6px;">💡 ¿Eres tú? Toca tu nombre para vincularlo:</p>' +
-        matches.map(c => `<div onclick="quickLinkClient(${c.id},'${c.name.replace(/'/g,"\'")}')" style="background:var(--surface); border:1px solid var(--accent); border-radius:8px; padding:8px 12px; cursor:pointer; font-size:0.85rem; margin-bottom:4px;">👤 ${c.name}</div>`).join('');
-    } else {
-      matchBox.style.display = 'none';
-    }
-  });
-  phoneInput.addEventListener('input', validate);
-}
-
-function quickLinkClient(id, name) {
-  // El cliente reconoce su nombre — vincular directamente
-  document.getElementById('reg-name').value = name;
-  document.getElementById('reg-name-match').style.display = 'none';
-  const btn = document.getElementById('acc-register-btn');
-  // Solo necesita confirmar el teléfono
-  const matchBox = document.getElementById('reg-name-match');
-  matchBox.style.display = '';
-  matchBox.innerHTML = `<div style="background:#26de8122; border:1px solid var(--green); border-radius:8px; padding:8px 12px; font-size:0.82rem; color:var(--green);">✅ ¡Te encontramos! Agrega tu teléfono y crea tu cuenta para ver tu historial.</div>`;
-}
-
-function registerClientAccount() {
-  const name = document.getElementById('reg-name').value.trim();
-  const phone = document.getElementById('reg-phone').value.trim().replace(/\D/g,'');
-  const msg = document.getElementById('acc-register-msg');
-  
-  if(!name || name.length < 2) { msg.innerHTML = '<p style="color:var(--accent2)">⚠️ Ingresa tu nombre completo.</p>'; return; }
-  if(!phone || phone.length < 7) { msg.innerHTML = '<p style="color:var(--accent2)">⚠️ Ingresa un teléfono válido.</p>'; return; }
-  
-  // ¿Ya existe cuenta con ese teléfono?
-  const byPhone = data.clients.find(c => c.phone && c.phone.replace(/\D/g,'').includes(phone));
-  if(byPhone) {
-    loggedClient = byPhone;
-    localStorage.setItem('client_session', JSON.stringify({id: loggedClient.id}));
-    msg.innerHTML = '<p style="color:var(--green)">✅ ¡Ya tienes cuenta! Entrando...</p>';
-    setTimeout(() => showClientDashboard(), 700);
+  if(!client) {
+    resultBox.innerHTML = `<div class="debt-card" style="border-color:var(--muted)">No encontramos ninguna cuenta vinculada al número ${phone}. (Asegúrate de haber comprado antes)</div>`;
     return;
   }
-  
-  // ¿Existe cliente con ese nombre sin teléfono? Vincular
-  const byName = data.clients.find(c => c.name.toLowerCase().trim() === name.toLowerCase().trim() && (!c.phone || c.phone === ''));
-  if(byName) {
-    byName.phone = phone;
-    loggedClient = byName;
-  } else {
-    const newClient = { id: newId(), name: name, phone: phone };
-    data.clients.push(newClient);
-    loggedClient = newClient;
-  }
-  
-  save();
-  localStorage.setItem('client_session', JSON.stringify({id: loggedClient.id}));
-  msg.innerHTML = '<p style="color:var(--green)">✅ ¡Cuenta creada! Enviando info por WhatsApp...</p>';
-  setTimeout(() => {
-    sendWhatsAppOnRegister(loggedClient);
-    showClientDashboard();
-    // Si venía del carrito, regresar al carrito
-    if(localStorage.getItem('cart_return')) {
-      localStorage.removeItem('cart_return');
-      setTimeout(() => showClientPage('cart', document.querySelectorAll('.c-nav-item')[1]), 800);
-    }
-  }, 800);
-}
+  const sales = data.sales.filter(s => s.clientId == client.id && !s.paid);
+  const totalDebt = sales.reduce((s, x) => s + x.total, 0);
 
-function showClientDashboard() {
-  if(!loggedClient) return;
-  accShow('acc-dashboard');
-  
-  document.getElementById('dash-client-name').textContent = loggedClient.name;
-  
-  // Deuda pendiente
-  const unpaid = data.sales.filter(s => s.clientId == loggedClient.id && !s.paid);
-  const totalDebt = unpaid.reduce((s, x) => s + x.total, 0);
-  const debtBox = document.getElementById('dash-debt-box');
-  
   if(totalDebt > 0) {
-    debtBox.style.cssText = 'border-radius:16px; padding:20px; margin-bottom:16px; text-align:center; background:#ff6b6b22; border:2px solid var(--accent2);';
-    debtBox.innerHTML = `
-      <div style="font-size:2rem; margin-bottom:4px;">🔴</div>
-      <p style="font-size:0.8rem; color:var(--muted); margin-bottom:4px;">Balance pendiente</p>
-      <div style="font-size:2.4rem; font-weight:900; color:var(--accent2); font-family:'Syne',sans-serif; line-height:1;">${fmt(totalDebt)}</div>
-      <p style="font-size:0.78rem; color:var(--muted); margin-top:8px;">${unpaid.length} compra(s) sin pagar</p>`;
+    let html = `<div class="debt-card"><div style="font-size:1.5rem">🔴</div><h3 style="color:var(--accent2); margin:8px 0;">Balance Pendiente</h3><div style="font-size:2rem; font-weight:800; font-family:'Syne',sans-serif;">${fmt(totalDebt)}</div><p style="font-size:0.85rem; margin-top:12px;">Hola <strong>${client.name}</strong>, tienes facturas pendientes:</p><div style="text-align:left; margin-top:12px; background:#00000033; padding:10px; border-radius:8px;">`;
+    sales.forEach(s => { html += `<div style="display:flex; justify-content:space-between; font-size:0.8rem; border-bottom:1px solid #ffffff11; padding:6px 0;"><span>${s.date.split('T')[0]}</span><span style="font-weight:bold">${fmt(s.total)}</span></div>`; });
+    html += `</div></div>`; resultBox.innerHTML = html;
   } else {
-    debtBox.style.cssText = 'border-radius:16px; padding:20px; margin-bottom:16px; text-align:center; background:#26de8122; border:2px solid var(--green);';
-    debtBox.innerHTML = `
-      <div style="font-size:2rem; margin-bottom:4px;">✅</div>
-      <p style="font-size:0.9rem; color:var(--green); font-weight:700; margin-bottom:4px;">¡Estás al día!</p>
-      <p style="font-size:0.8rem; color:var(--muted);">No tienes deudas pendientes.</p>`;
-  }
-  
-  // Pedido activo (onlineOrders pendiente)
-  const activeOrder = (data.onlineOrders || []).filter(o => o.clientId == loggedClient.id && o.status === 'pending');
-  const activeBox = document.getElementById('dash-active-order');
-  if(activeOrder.length > 0) {
-    const o = activeOrder[activeOrder.length-1];
-    activeBox.style.display = '';
-    document.getElementById('dash-active-order-detail').innerHTML = `
-      <div style="font-size:0.85rem; color:var(--text);">${o.items.map(i => i.qty+'x '+i.name).join(', ')}</div>
-      <div style="font-size:1.1rem; font-weight:700; color:var(--accent); margin-top:4px;">${fmt(o.total)}</div>`;
-  } else {
-    activeBox.style.display = 'none';
-  }
-  
-  // Historial de compras
-  const allSales = data.sales.filter(s => s.clientId == loggedClient.id).sort((a,b) => new Date(b.date)-new Date(a.date));
-  const salesList = document.getElementById('dash-sales-list');
-  
-  if(allSales.length === 0) {
-    salesList.innerHTML = '<div style="text-align:center; padding:24px; color:var(--muted); font-size:0.85rem;">Aún no tienes compras registradas.</div>';
-    return;
-  }
-  
-  salesList.innerHTML = allSales.map(s => {
-    const items = s.items.map(i => i.qty+'x '+i.name).join(', ');
-    const paid = s.paid;
-    return `<div style="background:var(--surface2); border-radius:12px; padding:14px; margin-bottom:8px; border-left:3px solid ${paid ? 'var(--green)' : 'var(--accent2)'};">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-        <span style="font-size:0.72rem; color:var(--muted);">${s.date.split('T')[0]}</span>
-        <span style="font-size:0.72rem; font-weight:700; color:${paid ? 'var(--green)' : 'var(--accent2)'};">${paid ? '✅ Pagado' : '🔴 Pendiente'}</span>
-      </div>
-      <div style="font-size:0.82rem; color:var(--muted); margin-bottom:4px;">${items}</div>
-      <div style="font-size:1rem; font-weight:700; color:var(--accent);">${fmt(s.total)}</div>
-    </div>`;
-  }).join('');
-}
-
-function goToAccountFromCart() {
-  // Guardar que venía del carrito para regresar después
-  localStorage.setItem('cart_return', '1');
-  showClientPage('account', document.querySelectorAll('.c-nav-item')[2]);
-  onAccountTabOpen();
-}
-
-// Número del negocio y cuenta bancaria
-const BUSINESS_PHONE = '18098863186';
-const BUSINESS_BANK = 'Banco Popular — Cuenta Corriente #852775865';
-
-function sendWhatsAppToClient(client) {
-  if(!client || !client.phone) return;
-  const phone = client.phone.replace(/\D/g,'');
-  if(phone.length < 7) return;
-  const fullPhone = phone.startsWith('1') ? phone : '1' + phone;
-  
-  const unpaid = data.sales.filter(s => s.clientId == client.id && !s.paid);
-  const totalDebt = unpaid.reduce((s,x) => s + x.total, 0);
-  
-  let msg = `Hola *${client.name}* 👋\n\n`;
-  if(totalDebt > 0) {
-    msg += `🔴 Tu balance pendiente en *La Pulpería El Choco* es:\n`;
-    msg += `*RD$${totalDebt.toLocaleString('es-DO', {minimumFractionDigits:2})}*\n\n`;
-    msg += `📋 Detalle:\n`;
-    unpaid.forEach(s => {
-      msg += `• ${s.date.split('T')[0]} — RD$${s.total.toLocaleString('es-DO', {minimumFractionDigits:2})}\n`;
-    });
-    msg += `\n💳 Puedes pagar por transferencia:\n*${BUSINESS_BANK}*\n`;
-  } else {
-    msg += `✅ Estás *al día* con nosotros. ¡Gracias!\n`;
-  }
-  msg += `\nCualquier duda escríbenos al: *${BUSINESS_PHONE}*`;
-  
-  const url = `https://wa.me/${fullPhone}?text=${encodeURIComponent(msg)}`;
-  window.open(url, '_blank');
-}
-
-function sendWhatsAppToAll() {
-  const clients = data.clients.filter(c => c.phone && c.phone.replace(/\D/g,'').length >= 7);
-  if(clients.length === 0) { alert('No hay clientes con teléfono registrado.'); return; }
-  if(!confirm(\`¿Enviar estado de cuenta a \${clients.length} cliente(s) con WhatsApp?\`)) return;
-  
-  let i = 0;
-  function sendNext() {
-    if(i >= clients.length) { alert('✅ Se abrieron todos los chats. Revisa las pestañas.'); return; }
-    sendWhatsAppToClient(clients[i]);
-    i++;
-    setTimeout(sendNext, 1500);
-  }
-  sendNext();
-}
-
-function sendWhatsAppOnRegister(client) {
-  if(!client || !client.phone) return;
-  const phone = client.phone.replace(/\D/g,'');
-  if(phone.length < 7) return;
-  const fullPhone = phone.startsWith('1') ? phone : '1' + phone;
-  
-  const unpaid = data.sales.filter(s => s.clientId == client.id && !s.paid);
-  const totalDebt = unpaid.reduce((s,x) => s + x.total, 0);
-  
-  let msg = `¡Hola *${client.name}*! 👋 Bienvenido a *La Pulpería El Choco* 🏪\n\n`;
-  msg += `Tu cuenta ha sido creada exitosamente.\n\n`;
-  
-  if(totalDebt > 0) {
-    msg += `🔴 Tienes un balance pendiente de *RD$${totalDebt.toLocaleString('es-DO', {minimumFractionDigits:2})}*\n\n`;
-    msg += `💳 Para pagar por transferencia:\n*${BUSINESS_BANK}*\n\n`;
-  } else {
-    msg += `✅ No tienes deudas pendientes. ¡Gracias!\n\n`;
-  }
-  msg += `Puedes ver tu cuenta en cualquier momento desde la tienda.`;
-  
-  const url = `https://wa.me/${fullPhone}?text=${encodeURIComponent(msg)}`;
-  window.open(url, '_blank');
-}
-
-function logoutClientAccount() {
-  loggedClient = null;
-  selectedClientForLogin = null;
-  localStorage.removeItem('client_session');
-  document.getElementById('acc-search-name') && (document.getElementById('acc-search-name').value = '');
-  accShow('acc-welcome');
-}
-
-function tryAutoLogin() {
-  const session = JSON.parse(localStorage.getItem('client_session') || 'null');
-  if(session && session.id) {
-    const client = data.clients.find(c => c.id === session.id);
-    if(client) { loggedClient = client; }
+    resultBox.innerHTML = `<div class="ok-card"><div style="font-size:2rem">✅</div><h3 style="color:var(--green); margin:8px 0;">¡Estás al día!</h3><p style="font-size:0.9rem;">Hola <strong>${client.name}</strong>, no tienes deudas pendientes.</p></div>`;
   }
 }
-
-function onAccountTabOpen() {
-  setupRegisterValidation();
-  if(loggedClient) { showClientDashboard(); }
-  else { accShow('acc-welcome'); }
-}
-
-function prefillCheckoutIfLogged() {
-  if(!loggedClient) return;
-  const sel = document.getElementById('client-select-existing');
-  if(!sel) return;
-  const opt = Array.from(sel.options).find(o => o.value == loggedClient.id);
-  if(opt) { sel.value = loggedClient.id; toggleNewClientFields(); }
-}
-
-function showLoginForm() { accShow('acc-welcome'); }
-function showRegisterForm() { accShow('acc-register'); setupRegisterValidation(); }
-function loginClientAccount() { accShow('acc-hasaccount'); }
-function checkClientAccount() { loginClientAccount(); }
 
 // ============================================================================
 // ======================= LÓGICA DEL ADMINISTRADOR ===========================
