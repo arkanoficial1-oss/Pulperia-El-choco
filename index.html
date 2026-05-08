@@ -92,6 +92,10 @@
   .total-box { background:var(--surface2); border:1px solid var(--accent); border-radius:var(--radius); padding:20px; text-align:center; }
   .debt-card { background:#ff6b6b15; border:1px solid #ff6b6b44; border-radius:8px; padding:16px; margin-top:20px; text-align:center; }
   .ok-card { background:#26de8115; border:1px solid #26de8144; border-radius:8px; padding:16px; margin-top:20px; text-align:center; }
+
+  #landing-wrapper { display: flex; }
+  #client-wrapper { display: none; }
+  #admin-wrapper { display: none; }
 </style>
 </head>
 <body>
@@ -456,23 +460,32 @@ function isTiendaMode() {
          window.location.href.includes('tienda');
 }
 
-window.addEventListener('DOMContentLoaded', function() {
-  if(isTiendaMode()) {
-    document.getElementById('landing-wrapper').style.display = 'none';
-    appMode = 'client';
-    document.getElementById('client-wrapper').style.display = 'block';
-    
-    loadFromCloud().then(() => { 
-      tryAutoLogin();
-      if(loggedClient) {
-        showClientPage('catalog', document.querySelectorAll('.c-nav-item')[0]);
-      } else {
-        showClientPage('account', document.querySelectorAll('.c-nav-item')[2]);
-        onAccountTabOpen();
-      }
-    });
+// Run immediately, don't wait for DOMContentLoaded
+(function initApp() {
+  function start() {
+    if(isTiendaMode()) {
+      var lw = document.getElementById('landing-wrapper');
+      var cw = document.getElementById('client-wrapper');
+      if(lw) lw.style.display = 'none';
+      if(cw) cw.style.display = 'block';
+      appMode = 'client';
+      loadFromCloud().then(function() { 
+        tryAutoLogin();
+        if(loggedClient) {
+          showClientPage('catalog', document.querySelectorAll('.c-nav-item')[0]);
+        } else {
+          showClientPage('account', document.querySelectorAll('.c-nav-item')[2]);
+          onAccountTabOpen();
+        }
+      });
+    }
   }
-});
+  if(document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start);
+  } else {
+    start();
+  }
+})();
 
 // ============ INICIO ADMIN ============
 function enterAdminMode() {
