@@ -125,7 +125,25 @@
       </div>
       <div id="cart-checkout-form" style="display:none;">
         <p class="text-green" style="font-size:0.85rem; margin-bottom:12px; text-align:center;">✅ Sesión iniciada. Listo para enviar.</p>
-        <div class="form-group" style="margin-top: 20px;"><label>¿Cómo deseas pagar?</label><select id="client-order-payment"><option value="inmediato">💵 Efectivo (al entregar)</option><option value="transferencia">🏦 Transferencia Bancaria</option><option value="credito5">📅 Anotar en mi cuenta (Fiado)</option></select></div>
+        
+        <div class="form-group" style="margin-top: 20px;">
+          <label>¿Cómo deseas pagar?</label>
+          <select id="client-order-payment" onchange="togglePaymentDetails()">
+            <option value="transferencia" selected>🏦 Transferencia Bancaria</option>
+            <option value="credito5">📅 Fiado (Crédito 5 días)</option>
+            <option value="credito">📅 Fiado (Otro plazo)</option>
+          </select>
+        </div>
+
+        <div id="transfer-info" style="background:#45aaf215; border:1px solid #45aaf244; padding:12px; border-radius:8px; margin-bottom:12px; text-align:left;">
+            <p style="font-size:0.85rem; margin-bottom:8px; color:var(--blue); font-weight:bold;">🏦 Datos para la Transferencia:</p>
+            <div style="font-size:0.9rem; line-height:1.5;">
+                Banco Popular (Corriente)<br>
+                Cuenta: <strong>852775865</strong><br>
+            </div>
+            <p style="font-size:0.8rem; margin-top:8px; color:var(--accent);">⚠️ Por favor, realiza el pago y envía el comprobante a nuestro WhatsApp (809 886 3186).</p>
+        </div>
+
         <button id="checkout-btn" class="btn btn-primary w100" style="padding:16px; font-size:1.1rem; border-radius:12px; margin-top:10px;" onclick="sendWebOrder()">✅ Enviar Pedido al Local</button>
       </div>
     </div>
@@ -294,7 +312,6 @@ function showClientPage(id, el) {
 }
 function populateClientNames() { document.getElementById('client-names-list').innerHTML = data.clients.map(c => `<option value="${c.name}">`).join(''); }
 
-// === MODIFICACIÓN DEL REGISTRO / LOGIN ===
 function checkAuthName() { 
     const n = document.getElementById('auth-name').value.trim().toLowerCase(), 
           ex = data.clients.find(c => c.name.toLowerCase() === n), 
@@ -351,7 +368,6 @@ function handleAuth() {
 
 function logoutClient() { loggedInClient = null; localStorage.removeItem('client_logged_in'); document.getElementById('auth-name').value = ''; document.getElementById('auth-phone').value = ''; document.getElementById('auth-pin').value = ''; checkAuthName(); showClientPage('account', document.getElementById('nav-account')); }
 
-// === MODIFICACIÓN DE LA VISTA DEL DASHBOARD PARA MOSTRAR DETALLE DE PRODUCTOS ===
 function refreshClientDashboard() { 
     if(!loggedInClient) return; 
     document.getElementById('dash-name').textContent = `Hola, ${loggedInClient.name}`; 
@@ -378,7 +394,36 @@ function renderClientCatalog() { const c = document.getElementById('client-catal
 function addToStoreCart(id, type) { const l = type === 'recipe' ? data.recipes : data.products, i = l.find(x => x.id === id); if(!i) return; const ex = storeCart.find(x => x.id === id && x.type === type); if(ex) ex.qty++; else storeCart.push({ id, type, name: i.name, emoji: i.emoji || '📦', price: i.price, qty: 1 }); updateStoreCartBadge(); alert(`✅ Agregado: ${i.name}`); }
 function updateStoreCartBadge() { const b = document.getElementById('client-cart-badge'), t = storeCart.reduce((s, i) => s + i.qty, 0); b.textContent = t; b.style.display = t > 0 ? 'inline-block' : 'none'; }
 function updateStoreQty(idx, d) { storeCart[idx].qty += d; if(storeCart[idx].qty <= 0) storeCart.splice(idx, 1); updateStoreCartBadge(); renderStoreCart(); }
-function renderStoreCart() { const c = document.getElementById('client-cart-items'), cb = document.getElementById('client-cart-checkout'); if(storeCart.length === 0) { c.innerHTML = `<p style="text-align:center; color:var(--muted); margin-top:40px;">Tu carrito está vacío.</p>`; cb.style.display = 'none'; return; } let t = 0; c.innerHTML = storeCart.map((i, idx) => { t += (i.price * i.qty); return `<div class="cart-item"><div style="font-size:1.8rem">${i.emoji}</div><div style="flex-grow:1; margin-left:12px;"><div style="font-size:.9rem; font-weight:500;">${i.name}</div><div style="color:var(--accent); font-weight:700; font-size:.9rem; margin-top:4px;">${fmt(i.price * i.qty)}</div></div><div style="display:flex; align-items:center; gap:10px;"><button class="qty-btn" onclick="updateStoreQty(${idx}, -1)">-</button><span style="font-weight:bold; width:20px; text-align:center">${i.qty}</span><button class="qty-btn" onclick="updateStoreQty(${idx}, 1)">+</button></div></div>`; }).join(''); document.getElementById('client-cart-total').textContent = fmt(t); cb.style.display = 'block'; if(loggedInClient) { document.getElementById('cart-auth-warning').style.display = 'none'; document.getElementById('cart-checkout-form').style.display = 'block'; } else { document.getElementById('cart-auth-warning').style.display = 'block'; document.getElementById('cart-checkout-form').style.display = 'none'; } }
+
+// === MODIFICACIÓN DEL PAGO VIRTUAL ===
+function togglePaymentDetails() {
+    const pt = document.getElementById('client-order-payment').value;
+    document.getElementById('transfer-info').style.display = pt === 'transferencia' ? 'block' : 'none';
+}
+
+function renderStoreCart() { 
+    const c = document.getElementById('client-cart-items'), cb = document.getElementById('client-cart-checkout'); 
+    if(storeCart.length === 0) { 
+        c.innerHTML = `<p style="text-align:center; color:var(--muted); margin-top:40px;">Tu carrito está vacío.</p>`; 
+        cb.style.display = 'none'; return; 
+    } 
+    let t = 0; 
+    c.innerHTML = storeCart.map((i, idx) => { 
+        t += (i.price * i.qty); 
+        return `<div class="cart-item"><div style="font-size:1.8rem">${i.emoji}</div><div style="flex-grow:1; margin-left:12px;"><div style="font-size:.9rem; font-weight:500;">${i.name}</div><div style="color:var(--accent); font-weight:700; font-size:.9rem; margin-top:4px;">${fmt(i.price * i.qty)}</div></div><div style="display:flex; align-items:center; gap:10px;"><button class="qty-btn" onclick="updateStoreQty(${idx}, -1)">-</button><span style="font-weight:bold; width:20px; text-align:center">${i.qty}</span><button class="qty-btn" onclick="updateStoreQty(${idx}, 1)">+</button></div></div>`; 
+    }).join(''); 
+    document.getElementById('client-cart-total').textContent = fmt(t); 
+    cb.style.display = 'block'; 
+    if(loggedInClient) { 
+        document.getElementById('cart-auth-warning').style.display = 'none'; 
+        document.getElementById('cart-checkout-form').style.display = 'block'; 
+        togglePaymentDetails(); // Asegura que el aviso de transferencia se muestre/oculte correctamente
+    } else { 
+        document.getElementById('cart-auth-warning').style.display = 'block'; 
+        document.getElementById('cart-checkout-form').style.display = 'none'; 
+    } 
+}
+
 async function sendWebOrder() { if(!loggedInClient) return alert('Debes iniciar sesión.'); const pt = document.getElementById('client-order-payment').value, b = document.getElementById('checkout-btn'); b.textContent = "⏳ Enviando..."; b.disabled = true; const no = { id: newId(), date: new Date().toISOString(), clientId: loggedInClient.id, clientName: loggedInClient.name, clientPhone: loggedInClient.phone || "", payType: pt, items: storeCart.map(i => ({...i})), total: storeCart.reduce((s,i) => s + (i.price*i.qty), 0), status: 'pending' }; try { fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'newOrder', order: no }) }); } catch(e) {} data.onlineOrders.push(no); save(); alert("✅ ¡ÉXITO! Tu pedido fue enviado."); storeCart = []; updateStoreCartBadge(); showClientPage('account', document.getElementById('nav-account')); b.textContent = "✅ Enviar Pedido al Local"; b.disabled = false; }
 
 // ADMIN MAIN
