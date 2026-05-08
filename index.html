@@ -392,19 +392,29 @@ function updateCloudStatus(msg, color) {
 async function loadFromCloud() {
   updateCloudStatus('🔄 Conectando...', 'var(--yellow)');
   try {
-    const res = await fetch(SCRIPT_URL, { cache: 'no-store' });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const cloudData = await res.json();
+    // Google Scripts redirigen — necesitamos seguir la redirección manualmente
+    const res = await fetch(SCRIPT_URL + '?t=' + Date.now(), { 
+      cache: 'no-store', 
+      credentials: 'omit',
+      redirect: 'follow',
+      mode: 'cors'
+    });
+    const text = await res.text();
+    let cloudData;
+    try { cloudData = JSON.parse(text); } catch(e) { throw new Error('JSON inválido: ' + text.substring(0,100)); }
     if(cloudData && cloudData.products) {
       data = cloudData;
       if(!data.onlineOrders) data.onlineOrders = [];
       localStorage.setItem('negocio_data', JSON.stringify(data));
       updateCloudStatus('🟢 Conectado', 'var(--green)');
-    } else {
+    } else if(cloudData && cloudData.error) {
+      throw new Error('Script error: ' + cloudData.error);
+    } else { 
       updateCloudStatus('☁️ Nube vacía', 'var(--muted)');
     }
   } catch(e) { 
-    console.warn('Error nube:', e.message);
+    console.warn('loadFromCloud error:', e.message);
+    // Fallback: usar datos de localStorage si hay productos guardados
     const local = JSON.parse(localStorage.getItem('negocio_data') || 'null');
     if(local && local.products && local.products.length > 0) {
       data = local;
@@ -568,27 +578,35 @@ async function sendWebOrder() {
     status: 'pending'
   };
 
-  // Enviar pedido al script con action:newOrder
+  // Enviar pedido al Google Script
+  let enviado = false;
   try {
-    fetch(SCRIPT_URL, {
+    // Intentar con fetch normal primero (funciona en GitHub Pages)
+    const res = await fetch(SCRIPT_URL, {
       method: 'POST',
-      mode: 'no-cors',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({ action: 'newOrder', order: newOrder })
     });
-  } catch(e) { console.warn("Error enviando:", e); }
+    if (res.ok || res.type === 'opaque') enviado = true;
+  } catch(e) {
+    // Fallback con no-cors
+    try {
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'newOrder', order: newOrder })
+      });
+      enviado = true;
+    } catch(e2) { console.warn("Error enviando:", e2); }
+  }
 
-  // Guardar en localStorage como respaldo siempre
+  // Guardar siempre en localStorage como respaldo
   const pendingLocal = JSON.parse(localStorage.getItem('client_pending_orders') || '[]');
   pendingLocal.push(newOrder);
   localStorage.setItem('client_pending_orders', JSON.stringify(pendingLocal));
 
-  // Añadir al data local para que el admin lo vea al refrescar
-  if (!data.onlineOrders) data.onlineOrders = [];
-  data.onlineOrders.push(newOrder);
-  localStorage.setItem('negocio_data', JSON.stringify(data));
-
-  alert("✅ ¡ÉXITO! Tu pedido ha llegado al local.");
+  alert("✅ ¡Tu pedido llegó al local! Pronto lo prepararemos.");
   storeCart = []; updateStoreCartBadge();
   document.getElementById('client-order-name').value = '';
   document.getElementById('client-order-phone').value = '';
@@ -605,7 +623,7 @@ function startAdminPolling() {
   adminPollInterval = setInterval(async () => {
     if(appMode !== 'admin') return;
     try {
-      const res = await fetch(SCRIPT_URL);
+      const res = await fetch(SCRIPT_URL + '?nocache=' + Date.now());
       const cloudData = await res.json();
       if(cloudData && cloudData.products) {
         const prevCount = (data.onlineOrders||[]).length;
