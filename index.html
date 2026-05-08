@@ -392,23 +392,19 @@ function updateCloudStatus(msg, color) {
 async function loadFromCloud() {
   updateCloudStatus('🔄 Conectando...', 'var(--yellow)');
   try {
-    const res = await fetch(SCRIPT_URL + '?t=' + Date.now());
-    const text = await res.text();
-    let cloudData;
-    try { cloudData = JSON.parse(text); } catch(e) { throw new Error('JSON inválido: ' + text.substring(0,100)); }
+    const res = await fetch(SCRIPT_URL, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const cloudData = await res.json();
     if(cloudData && cloudData.products) {
       data = cloudData;
       if(!data.onlineOrders) data.onlineOrders = [];
       localStorage.setItem('negocio_data', JSON.stringify(data));
       updateCloudStatus('🟢 Conectado', 'var(--green)');
-    } else if(cloudData && cloudData.error) {
-      throw new Error('Script error: ' + cloudData.error);
-    } else { 
+    } else {
       updateCloudStatus('☁️ Nube vacía', 'var(--muted)');
     }
   } catch(e) { 
-    console.warn('loadFromCloud error:', e.message);
-    // Fallback: usar datos de localStorage si hay productos guardados
+    console.warn('Error nube:', e.message);
     const local = JSON.parse(localStorage.getItem('negocio_data') || 'null');
     if(local && local.products && local.products.length > 0) {
       data = local;
