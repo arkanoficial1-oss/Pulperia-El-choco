@@ -272,9 +272,9 @@
   </div>
 
   <nav class="client-nav">
-    <button class="c-nav-item" onclick="showClientPage('catalog', this)"><div class="icon">🏠</div>Catálogo</button>
+    <button class="c-nav-item active" onclick="showClientPage('catalog', this)"><div class="icon">🏠</div>Catálogo</button>
     <button class="c-nav-item" onclick="showClientPage('cart', this)"><div class="icon">🛒<span id="client-cart-badge" class="c-cart-badge">0</span></div>Mi Pedido</button>
-    <button class="c-nav-item active" onclick="showClientPage('account', this)"><div class="icon">👤</div>Mi Cuenta</button>
+    <button class="c-nav-item" onclick="showClientPage('account', this)"><div class="icon">👤</div>Mi Cuenta</button>
   </nav>
 </div>
 
@@ -458,15 +458,8 @@ window.onload = () => {
     
     // Solo mostramos el catálogo inicialmente
     loadFromCloud().then(() => { 
+      renderClientCatalog();
       tryAutoLogin();
-      if(loggedClient) {
-        // Ya está logueado — mostrar catálogo directo
-        showClientPage('catalog', document.querySelectorAll('.c-nav-item')[0]);
-      } else {
-        // No logueado — mostrar cuenta primero
-        showClientPage('account', document.querySelectorAll('.c-nav-item')[2]);
-        onAccountTabOpen();
-      }
     });
   }
 }
@@ -801,15 +794,11 @@ function confirmClientLogin() {
   loggedClient = selectedClientForLogin;
   localStorage.setItem('client_session', JSON.stringify({id: loggedClient.id}));
   showClientDashboard();
-  // Después de 1.5s ir al catálogo
-  setTimeout(() => {
-    if(localStorage.getItem('cart_return')) {
-      localStorage.removeItem('cart_return');
-      showClientPage('cart', document.querySelectorAll('.c-nav-item')[1]);
-    } else {
-      showClientPage('catalog', document.querySelectorAll('.c-nav-item')[0]);
-    }
-  }, 1500);
+  // Si venía del carrito, regresar
+  if(localStorage.getItem('cart_return')) {
+    localStorage.removeItem('cart_return');
+    setTimeout(() => showClientPage('cart', document.querySelectorAll('.c-nav-item')[1]), 1000);
+  }
 }
 
 // Validar formulario de registro en tiempo real
