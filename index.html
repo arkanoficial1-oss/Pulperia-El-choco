@@ -137,11 +137,16 @@
 
         <div id="transfer-info" style="background:#45aaf215; border:1px solid #45aaf244; padding:12px; border-radius:8px; margin-bottom:12px; text-align:left;">
             <p style="font-size:0.85rem; margin-bottom:8px; color:var(--blue); font-weight:bold;">🏦 Datos para la Transferencia:</p>
-            <div style="font-size:0.9rem; line-height:1.5;">
-                Banco Popular (Corriente)<br>
-                Cuenta: <strong>852775865</strong><br>
+            <div style="font-size:0.9rem; line-height:1.5;">Banco Popular (Corriente)<br>Cuenta: <strong>852775865</strong></div>
+            <div class="form-group" style="margin-top:12px; border-top:1px solid #45aaf244; padding-top:12px;">
+                <label style="color:var(--text); font-weight:bold;">📸 Sube tu comprobante (Recomendado)</label>
+                <input type="file" id="client-receipt" accept="image/*" style="background:var(--surface); padding:8px; border-color:var(--blue);">
             </div>
-            <p style="font-size:0.8rem; margin-top:8px; color:var(--accent);">⚠️ Por favor, realiza el pago y envía el comprobante a nuestro WhatsApp (809 886 3186).</p>
+        </div>
+
+        <div id="client-credito-days-wrap" class="form-group" style="display:none; margin-bottom:12px;">
+            <label style="color:var(--accent); font-weight:bold;">¿Cuántos días de crédito necesitas?</label>
+            <input type="number" id="client-credit-days" value="15" min="1" max="60">
         </div>
 
         <button id="checkout-btn" class="btn btn-primary w100" style="padding:16px; font-size:1.1rem; border-radius:12px; margin-top:10px;" onclick="sendWebOrder()">✅ Enviar Pedido al Local</button>
@@ -188,7 +193,7 @@
 
   <div id="admin-page-weborders" class="admin-page">
     <div class="flex-between mb-16"><h2 class="section-title" style="margin:0">🌐 Pedidos de la Tienda Virtual</h2><button class="btn btn-edit" onclick="loadFromCloud()"><span style="font-size:1.1rem">↻</span> Buscar nuevos</button></div>
-    <div class="card" style="padding:0;overflow:hidden;overflow-x:auto"><table><thead><tr><th>Hora</th><th>Cliente Info</th><th>Detalle del Pedido</th><th>Total</th><th>Acciones</th></tr></thead><tbody id="weborders-body"></tbody></table></div>
+    <div class="card" style="padding:0;overflow:hidden;overflow-x:auto"><table><thead><tr><th>Hora</th><th>Cliente Info</th><th>Detalle del Pedido</th><th>Total y Comprobante</th><th>Acciones</th></tr></thead><tbody id="weborders-body"></tbody></table></div>
   </div>
 
   <div id="admin-page-inventory" class="admin-page">
@@ -243,7 +248,26 @@
   <div class="modal-overlay" id="modal-recipe"><div class="modal"><div class="modal-header"><div class="modal-title" id="mr-title">Receta</div><button class="close-btn" onclick="closeModal('modal-recipe')">×</button></div><div class="form-group"><label>Nombre</label><input id="r-name"></div><div class="form-group"><label>Emoji</label><input id="r-emoji" maxlength="4"></div><div class="form-group"><label>Precio Venta</label><input type="number" id="r-price"></div><div style="display:grid;grid-template-columns:1fr 70px 90px 28px;gap:6px;margin-bottom:6px"><span class="text-muted" style="font-size:.7rem">Ingrediente</span><span class="text-muted" style="font-size:.7rem">Cant.</span><span class="text-muted" style="font-size:.7rem">Costo</span><span></span></div><div id="recipe-ingredients"></div><button class="btn btn-ghost btn-sm mt-10" onclick="addIngredientRow()">+ Ingrediente</button><hr><div class="flex-between mb-8"><span class="text-muted">Costo total:</span><span class="fw-bold text-red" id="recipe-cost-disp">RD$0.00</span></div><div class="flex-between mb-8"><span class="text-muted">Ganancia:</span><span class="fw-bold text-green" id="recipe-profit-disp">RD$0.00</span></div><input type="hidden" id="r-edit-id"><button class="btn btn-primary w100 mt-10" onclick="saveRecipe()">Guardar</button></div></div>
   <div class="modal-overlay" id="modal-purchase"><div class="modal"><div class="modal-header"><div class="modal-title">Compra</div><button class="close-btn" onclick="closeModal('modal-purchase')">×</button></div><div class="form-group"><label>Artículo</label><input id="pu-item"></div><div class="form-group"><label>Categoría</label><select id="pu-cat"><option value="">Ninguna</option><option>Ingrediente</option><option>Bebidas</option><option>Snacks</option><option>Otro</option></select></div><div class="grid2"><div class="form-group"><label>Cantidad</label><input type="number" id="pu-qty" step="0.01"></div><div class="form-group"><label>Costo u.</label><input type="number" id="pu-cost"></div></div><div class="form-group"><label>Proveedor</label><input id="pu-supplier"></div><div class="form-group"><label>¿Agregar a inventario?</label><select id="pu-product"><option value="new">➕ Crear nuevo</option><option value="">— Solo registrar —</option></select></div><div id="pu-new-product-wrap" style="background:var(--surface2);padding:12px;border-radius:8px;margin-bottom:12px"><div class="grid2"><div class="form-group"><label>Precio Venta</label><input type="number" id="pu-sell-price"></div><div class="form-group"><label>Categoría Venta</label><select id="pu-sell-cat"><option>Bebidas</option><option>Snacks</option><option>Comida</option><option>Otro</option></select></div></div><div class="form-group"><label>Emoji</label><input id="pu-sell-emoji"></div></div><div class="flex-between mb-16"><span class="text-muted">Total:</span><span class="fw-bold text-yellow" id="pu-total">RD$0.00</span></div><input type="hidden" id="pu-edit-id"><button class="btn btn-primary w100" onclick="savePurchase()">Guardar</button></div></div>
   <div class="modal-overlay" id="modal-client"><div class="modal"><div class="modal-header"><div class="modal-title" id="mc-title">Cliente</div><button class="close-btn" onclick="closeModal('modal-client')">×</button></div><div class="form-group"><label>Nombre</label><input id="c-name"></div><div class="form-group"><label>Teléfono</label><input id="c-phone"></div><div class="form-group"><label>PIN de Acceso</label><input id="c-pin" placeholder="Opcional"></div><input type="hidden" id="c-edit-id"><button class="btn btn-primary w100" onclick="saveClient()">Guardar</button></div></div>
-  <div class="modal-overlay" id="modal-approve-web"><div class="modal"><div class="modal-header"><div class="modal-title">Cobrar Pedido</div><button class="close-btn" onclick="closeModal('modal-approve-web')">×</button></div><div id="aw-details" style="margin-bottom:16px; font-size:0.9rem;"></div><div class="form-group"><label>Vincular a cliente</label><select id="aw-client"><option value="">— Al Contado —</option></select></div><div class="form-group"><label>Estado de pago</label><select id="aw-payment"><option value="inmediato">💵 Efectivo</option><option value="transferencia">🏦 Transferencia</option><option value="credito5">📅 Fiado 5 días</option><option value="credito">📅 Fiado (otro)</option></select></div><input type="hidden" id="aw-order-id"><button class="btn btn-success w100 mt-10" onclick="confirmWebOrder()">✅ Cobrar y Registrar</button></div></div>
+  
+  <div class="modal-overlay" id="modal-approve-web">
+    <div class="modal">
+        <div class="modal-header"><div class="modal-title">Cobrar Pedido</div><button class="close-btn" onclick="closeModal('modal-approve-web')">×</button></div>
+        <div id="aw-details" style="margin-bottom:16px; font-size:0.9rem;"></div>
+        <div class="form-group"><label>Vincular a cliente</label><select id="aw-client"><option value="">— Al Contado —</option></select></div>
+        <div class="form-group">
+            <label>Estado de pago</label>
+            <select id="aw-payment" onchange="document.getElementById('aw-credit-wrap').style.display=this.value==='credito'?'block':'none'">
+                <option value="inmediato">💵 Efectivo</option>
+                <option value="transferencia">🏦 Transferencia</option>
+                <option value="credito5">📅 Fiado 5 días</option>
+                <option value="credito">📅 Fiado (otro)</option>
+            </select>
+        </div>
+        <div id="aw-credit-wrap" class="form-group" style="display:none;"><label>Días de crédito</label><input type="number" id="aw-credit-days" value="15"></div>
+        <input type="hidden" id="aw-order-id">
+        <button class="btn btn-success w100 mt-10" onclick="confirmWebOrder()">✅ Cobrar y Registrar</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -313,57 +337,30 @@ function showClientPage(id, el) {
 function populateClientNames() { document.getElementById('client-names-list').innerHTML = data.clients.map(c => `<option value="${c.name}">`).join(''); }
 
 function checkAuthName() { 
-    const n = document.getElementById('auth-name').value.trim().toLowerCase(), 
-          ex = data.clients.find(c => c.name.toLowerCase() === n), 
-          pg = document.getElementById('auth-phone-group'), 
-          msg = document.getElementById('auth-name-msg'), 
-          pl = document.getElementById('auth-pin-label'),
-          phl = document.getElementById('auth-phone-label'); 
-    
+    const n = document.getElementById('auth-name').value.trim().toLowerCase(), ex = data.clients.find(c => c.name.toLowerCase() === n), pg = document.getElementById('auth-phone-group'), msg = document.getElementById('auth-name-msg'), pl = document.getElementById('auth-pin-label'), phl = document.getElementById('auth-phone-label'); 
     if(ex) { 
-        msg.style.display = 'block'; 
-        pl.textContent = ex.pin ? 'Ingresa tu PIN de 4 números' : 'Crea un PIN de 4 números para tu cuenta'; 
-        if(!ex.phone || ex.phone.trim() === '') {
-            pg.style.display = 'block';
-            phl.innerHTML = '⚠️ Faltaba tu número, por favor agrégalo:';
-        } else {
-            pg.style.display = 'none';
-        }
+        msg.style.display = 'block'; pl.textContent = ex.pin ? 'Ingresa tu PIN de 4 números' : 'Crea un PIN de 4 números para tu cuenta'; 
+        if(!ex.phone || ex.phone.trim() === '') { pg.style.display = 'block'; phl.innerHTML = '⚠️ Faltaba tu número, por favor agrégalo:'; } else { pg.style.display = 'none'; }
     } else { 
-        msg.style.display = 'none'; 
-        pl.textContent = 'Crea un PIN de 4 números'; 
-        if(n) {
-            pg.style.display = 'block';
-            phl.innerHTML = 'Tu Teléfono (WhatsApp)';
-        } else {
-            pg.style.display = 'none';
-        }
+        msg.style.display = 'none'; pl.textContent = 'Crea un PIN de 4 números'; 
+        if(n) { pg.style.display = 'block'; phl.innerHTML = 'Tu Teléfono (WhatsApp)'; } else { pg.style.display = 'none'; }
     } 
 }
 
 function handleAuth() { 
-    const n = document.getElementById('auth-name').value.trim(), 
-          p = document.getElementById('auth-pin').value.trim(),
-          ph = document.getElementById('auth-phone').value.trim(); 
-    if(!n) return alert('Por favor ingresa tu nombre.'); 
-    if(!p || p.length < 4) return alert('Ingresa un PIN de al menos 4 números.'); 
+    const n = document.getElementById('auth-name').value.trim(), p = document.getElementById('auth-pin').value.trim(), ph = document.getElementById('auth-phone').value.trim(); 
+    if(!n) return alert('Por favor ingresa tu nombre.'); if(!p || p.length < 4) return alert('Ingresa un PIN de al menos 4 números.'); 
     let c = data.clients.find(x => x.name.toLowerCase() === n.toLowerCase()); 
     if(c) { 
         if(c.pin && c.pin !== p) return alert('PIN incorrecto.'); 
-        let updated = false;
-        if(!c.pin) { c.pin = p; updated = true; }
+        let updated = false; if(!c.pin) { c.pin = p; updated = true; }
         if((!c.phone || c.phone.trim() === '') && ph) { c.phone = ph; updated = true; } else if((!c.phone || c.phone.trim() === '') && !ph) { return alert('Por favor ingresa tu número de WhatsApp para continuar.'); }
         if(updated) { save(); alert('¡Datos actualizados!'); }
     } else { 
         if(!ph) return alert('Requerimos tu teléfono para crear la cuenta.'); 
-        c = { id: newId(), name: n, phone: ph, pin: p }; 
-        data.clients.push(c); 
-        save(); 
-        alert('¡Cuenta creada exitosamente!'); 
+        c = { id: newId(), name: n, phone: ph, pin: p }; data.clients.push(c); save(); alert('¡Cuenta creada exitosamente!'); 
     } 
-    loggedInClient = c; 
-    localStorage.setItem('client_logged_in', JSON.stringify(c)); 
-    showClientPage('account', document.getElementById('nav-account')); 
+    loggedInClient = c; localStorage.setItem('client_logged_in', JSON.stringify(c)); showClientPage('account', document.getElementById('nav-account')); 
 }
 
 function logoutClient() { loggedInClient = null; localStorage.removeItem('client_logged_in'); document.getElementById('auth-name').value = ''; document.getElementById('auth-phone').value = ''; document.getElementById('auth-pin').value = ''; checkAuthName(); showClientPage('account', document.getElementById('nav-account')); }
@@ -379,8 +376,7 @@ function refreshClientDashboard() {
             const it = s.items.map(i=>`• ${i.qty}x ${i.name}`).join('<br>'); 
             ht += `<div style="font-size:0.85rem; border-bottom:1px solid #ffffff11; padding:10px 0;"><div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span style="color:var(--muted)">📅 ${s.date.split('T')[0]}</span><span style="font-weight:bold; color:var(--accent2);">${fmt(s.total)}</span></div><div style="color:var(--text); font-size:0.8rem; line-height:1.4;">${it}</div></div>`; 
         }); 
-        ht += `</div></div>`; 
-        res.innerHTML = ht; 
+        ht += `</div></div>`; res.innerHTML = ht; 
     } else { 
         res.innerHTML = `<div class="ok-card"><div style="font-size:2rem">✅</div><h3 style="color:var(--green); margin:8px 0;">¡Estás al día!</h3><p style="font-size:0.9rem;">No tienes deudas pendientes.</p></div>`; 
     } 
@@ -395,36 +391,62 @@ function addToStoreCart(id, type) { const l = type === 'recipe' ? data.recipes :
 function updateStoreCartBadge() { const b = document.getElementById('client-cart-badge'), t = storeCart.reduce((s, i) => s + i.qty, 0); b.textContent = t; b.style.display = t > 0 ? 'inline-block' : 'none'; }
 function updateStoreQty(idx, d) { storeCart[idx].qty += d; if(storeCart[idx].qty <= 0) storeCart.splice(idx, 1); updateStoreCartBadge(); renderStoreCart(); }
 
-// === MODIFICACIÓN DEL PAGO VIRTUAL ===
+// PAGOS TIENDA
 function togglePaymentDetails() {
     const pt = document.getElementById('client-order-payment').value;
     document.getElementById('transfer-info').style.display = pt === 'transferencia' ? 'block' : 'none';
+    document.getElementById('client-credito-days-wrap').style.display = pt === 'credito' ? 'block' : 'none';
 }
 
 function renderStoreCart() { 
     const c = document.getElementById('client-cart-items'), cb = document.getElementById('client-cart-checkout'); 
-    if(storeCart.length === 0) { 
-        c.innerHTML = `<p style="text-align:center; color:var(--muted); margin-top:40px;">Tu carrito está vacío.</p>`; 
-        cb.style.display = 'none'; return; 
-    } 
+    if(storeCart.length === 0) { c.innerHTML = `<p style="text-align:center; color:var(--muted); margin-top:40px;">Tu carrito está vacío.</p>`; cb.style.display = 'none'; return; } 
     let t = 0; 
     c.innerHTML = storeCart.map((i, idx) => { 
         t += (i.price * i.qty); 
         return `<div class="cart-item"><div style="font-size:1.8rem">${i.emoji}</div><div style="flex-grow:1; margin-left:12px;"><div style="font-size:.9rem; font-weight:500;">${i.name}</div><div style="color:var(--accent); font-weight:700; font-size:.9rem; margin-top:4px;">${fmt(i.price * i.qty)}</div></div><div style="display:flex; align-items:center; gap:10px;"><button class="qty-btn" onclick="updateStoreQty(${idx}, -1)">-</button><span style="font-weight:bold; width:20px; text-align:center">${i.qty}</span><button class="qty-btn" onclick="updateStoreQty(${idx}, 1)">+</button></div></div>`; 
     }).join(''); 
-    document.getElementById('client-cart-total').textContent = fmt(t); 
-    cb.style.display = 'block'; 
-    if(loggedInClient) { 
-        document.getElementById('cart-auth-warning').style.display = 'none'; 
-        document.getElementById('cart-checkout-form').style.display = 'block'; 
-        togglePaymentDetails(); // Asegura que el aviso de transferencia se muestre/oculte correctamente
-    } else { 
-        document.getElementById('cart-auth-warning').style.display = 'block'; 
-        document.getElementById('cart-checkout-form').style.display = 'none'; 
-    } 
+    document.getElementById('client-cart-total').textContent = fmt(t); cb.style.display = 'block'; 
+    if(loggedInClient) { document.getElementById('cart-auth-warning').style.display = 'none'; document.getElementById('cart-checkout-form').style.display = 'block'; togglePaymentDetails(); } else { document.getElementById('cart-auth-warning').style.display = 'block'; document.getElementById('cart-checkout-form').style.display = 'none'; } 
 }
 
-async function sendWebOrder() { if(!loggedInClient) return alert('Debes iniciar sesión.'); const pt = document.getElementById('client-order-payment').value, b = document.getElementById('checkout-btn'); b.textContent = "⏳ Enviando..."; b.disabled = true; const no = { id: newId(), date: new Date().toISOString(), clientId: loggedInClient.id, clientName: loggedInClient.name, clientPhone: loggedInClient.phone || "", payType: pt, items: storeCart.map(i => ({...i})), total: storeCart.reduce((s,i) => s + (i.price*i.qty), 0), status: 'pending' }; try { fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'newOrder', order: no }) }); } catch(e) {} data.onlineOrders.push(no); save(); alert("✅ ¡ÉXITO! Tu pedido fue enviado."); storeCart = []; updateStoreCartBadge(); showClientPage('account', document.getElementById('nav-account')); b.textContent = "✅ Enviar Pedido al Local"; b.disabled = false; }
+async function sendWebOrder() { 
+    if(!loggedInClient) return alert('Debes iniciar sesión.'); 
+    const pt = document.getElementById('client-order-payment').value, b = document.getElementById('checkout-btn'); 
+    
+    let cd = 0;
+    if(pt === 'credito5') cd = 5;
+    if(pt === 'credito') cd = parseInt(document.getElementById('client-credit-days').value) || 15;
+
+    b.textContent = "⏳ Enviando..."; b.disabled = true; 
+    
+    let receiptBase64 = null;
+    if(pt === 'transferencia') {
+        const fi = document.getElementById('client-receipt');
+        if(fi.files.length > 0) {
+            try {
+                receiptBase64 = await new Promise((res, rej) => {
+                    const r = new FileReader();
+                    r.onload = e => res(e.target.result);
+                    r.onerror = e => rej(e);
+                    r.readAsDataURL(fi.files[0]);
+                });
+            } catch(err){}
+        }
+    }
+
+    const no = { 
+        id: newId(), date: new Date().toISOString(), clientId: loggedInClient.id, clientName: loggedInClient.name, clientPhone: loggedInClient.phone || "", 
+        payType: pt, creditDays: cd, receipt: receiptBase64, items: storeCart.map(i => ({...i})), total: storeCart.reduce((s,i) => s + (i.price*i.qty), 0), status: 'pending' 
+    }; 
+
+    try { fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'newOrder', order: no }) }); } catch(e) {} 
+    
+    data.onlineOrders.push(no); save(); 
+    alert("✅ ¡ÉXITO! Tu pedido fue enviado al local."); 
+    storeCart = []; updateStoreCartBadge(); showClientPage('account', document.getElementById('nav-account')); 
+    b.textContent = "✅ Enviar Pedido al Local"; b.disabled = false; 
+}
 
 // ADMIN MAIN
 let adminPollInterval = null; function startAdminPolling() { if(adminPollInterval) return; adminPollInterval = setInterval(async () => { if(appMode !== 'admin') return; try { const r = await fetch(SCRIPT_URL), cd = await r.json(); if(cd && cd.products) { const pc = (data.onlineOrders||[]).length; data = sanitizeData(cd); localStorage.setItem('negocio_data', JSON.stringify(data)); if(data.onlineOrders.length > pc) { renderWebOrders(); updateAlertBadge(); document.title = `🔔 ${data.onlineOrders.length - pc} pedido(s)! - Admin`; setTimeout(() => document.title = '🏪 Mi Negocio', 5000); } } } catch(e){} }, 30000); }
@@ -452,11 +474,60 @@ function clearPosCart(){posCart=[];renderPosCart();}
 function renderPosCart(){ const w=document.getElementById('admin-cart-items'); if(!posCart.length){w.innerHTML='<p class="text-muted" style="padding:16px 0;text-align:center;">Toca un producto →</p>'; document.getElementById('admin-cart-subtotal').textContent='RD$0.00'; document.getElementById('admin-cart-total').textContent='RD$0.00'; return;} w.innerHTML=posCart.map((i,idx)=>`<div class="cart-item"><span style="font-size:1.2rem">${i.emoji}</span><span style="flex:1;font-size:.875rem">${i.name}</span><div class="cart-qty"><button class="qty-btn" onclick="updatePosCartQty(${idx},-1)">−</button><span>${i.qty}</span><button class="qty-btn" onclick="updatePosCartQty(${idx},+1)">+</button></div><span class="text-yellow" style="min-width:68px;text-align:right;font-size:.85rem">${fmt(i.price*i.qty)}</span></div>`).join(''); const t=posCart.reduce((s,i)=>s+i.price*i.qty,0); document.getElementById('admin-cart-subtotal').textContent=fmt(t); document.getElementById('admin-cart-total').textContent=fmt(t); }
 function completePosSale(){ if(!posCart.length) return alert('Vacío'); const pt=document.getElementById('admin-pos-payment').value; let cd=0, dd=null; if(pt==='credito5') cd=5; if(pt==='credito') cd=parseInt(document.getElementById('admin-pos-credit-days').value)||5; if(cd>0){ const d=new Date(); d.setDate(d.getDate()+cd); dd=d.toISOString().split('T')[0]; } const rId=document.getElementById('admin-pos-client').value, cId=rId?parseInt(rId):null, c=cId?data.clients.find(x=>x.id===cId):null, t=posCart.reduce((s,i)=>s+i.price*i.qty,0), s={id:newId(),date:new Date().toISOString(), clientId: cId, clientName: c?c.name:'Al Contado', items:posCart.map(i=>({...i})),total:t,payType:pt,creditDays:cd,dueDate:dd, paid:pt==='inmediato'||pt==='transferencia'}; s.items.forEach(i=>{ if(i.type!=='recipe'){const p=data.products.find(x=>x.id==i.id);if(p) p.stock=Math.max(0,p.stock-i.qty);} }); data.sales.push(s); save(); posCart=[]; renderPosCart(); updateAlertBadge(); alert(`✅ Venta a ${s.clientName}\nTotal: ${fmt(t)}`); }
 
-// ADMIN WEB ORDERS
-function renderWebOrders() { const tb = document.getElementById('weborders-body'), bd = document.getElementById('web-badge'), o = data.onlineOrders || []; bd.textContent = o.length; bd.style.display = o.length > 0 ? 'inline' : 'none'; if(!o.length) { tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px">Sin pedidos.</td></tr>'; return; } tb.innerHTML = o.map(x => { const pl = {inmediato:'💵 Efectivo', transferencia:'🏦 Transf.', credito5:'📅 Fiado', credito:'📅 Fiado'}[x.payType] || x.payType; return `<tr style="background:#f7b7310a"><td style="font-size:.78rem">${dateStr(x.date)}</td><td><strong>${x.clientName}</strong><br><span style="font-size:.75rem;color:var(--muted)">📞 ${x.clientPhone}</span></td><td style="font-size:.78rem">${x.items.map(i=>`${i.qty}x ${i.emoji} ${i.name}`).join('<br>')}</td><td><div class="text-yellow fw-bold">${fmt(x.total)}</div><div style="font-size:0.75rem; color:var(--muted);">${pl}</div></td><td style="white-space:nowrap;"><button class="btn btn-whatsapp btn-sm" onclick="notifyOrderReady(${x.id})">🔔</button> <button class="btn btn-success btn-sm" onclick="openApproveWeb(${x.id})">✅</button> <button class="btn btn-danger btn-sm" onclick="deleteWebOrder(${x.id})">🗑️</button></td></tr>`; }).join(''); }
+// ADMIN WEB ORDERS (MODIFICADO PARA MOSTRAR DÍAS Y COMPROBANTE)
+function renderWebOrders() { 
+    const tb = document.getElementById('weborders-body'), bd = document.getElementById('web-badge'), o = data.onlineOrders || []; 
+    bd.textContent = o.length; bd.style.display = o.length > 0 ? 'inline' : 'none'; 
+    if(!o.length) { tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px">Sin pedidos.</td></tr>'; return; } 
+    
+    tb.innerHTML = o.map(x => { 
+        const pl = {inmediato:'💵 Efectivo', transferencia:'🏦 Transf.', credito5:'📅 Fiado 5 días', credito:`📅 Fiado ${x.creditDays||0} días`}[x.payType] || x.payType; 
+        const imgBtn = x.receipt ? `<br><a href="${x.receipt}" target="_blank" style="color:var(--blue); font-size:0.75rem; text-decoration:underline; display:inline-block; margin-top:4px;">🖼️ Ver Comprobante</a>` : '';
+        return `<tr style="background:#f7b7310a">
+            <td style="font-size:.78rem">${dateStr(x.date)}</td>
+            <td><strong>${x.clientName}</strong><br><span style="font-size:.75rem;color:var(--muted)">📞 ${x.clientPhone}</span></td>
+            <td style="font-size:.78rem">${x.items.map(i=>`${i.qty}x ${i.emoji} ${i.name}`).join('<br>')}</td>
+            <td><div class="text-yellow fw-bold">${fmt(x.total)}</div><div style="font-size:0.75rem; color:var(--muted);">${pl}</div>${imgBtn}</td>
+            <td style="white-space:nowrap;">
+                <button class="btn btn-whatsapp btn-sm" onclick="notifyOrderReady(${x.id})">🔔</button> 
+                <button class="btn btn-success btn-sm" onclick="openApproveWeb(${x.id})">✅</button> 
+                <button class="btn btn-danger btn-sm" onclick="deleteWebOrder(${x.id})">🗑️</button>
+            </td>
+        </tr>`; 
+    }).join(''); 
+}
+
 function notifyOrderReady(id) { const o = data.onlineOrders.find(x => x.id === id); if(!o || !o.clientPhone) return; let m = `Hola *${o.clientName}*\n\n¡Tu pedido está LISTO!\nTotal: ${fmt(o.total)}`, ph = o.clientPhone.replace(/\D/g,''); window.open(`https://wa.me/${ph}?text=${encodeURIComponent(m)}`, '_blank'); }
-function openApproveWeb(id) { const o = data.onlineOrders.find(x => x.id === id); if(!o) return; document.getElementById('aw-order-id').value = id; document.getElementById('aw-details').innerHTML = `<strong>${o.clientName}</strong> - ${fmt(o.total)}`; const s = document.getElementById('aw-client'); s.innerHTML = '<option value="">— Al Contado —</option>'; data.clients.forEach(c => s.innerHTML += `<option value="${c.id}">${c.name}</option>`); if(o.clientId) s.value = o.clientId; document.getElementById('aw-payment').value = o.payType || 'inmediato'; openModal('modal-approve-web'); }
-function confirmWebOrder() { const id = parseInt(document.getElementById('aw-order-id').value), idx = data.onlineOrders.findIndex(x => x.id === id); if(idx === -1) return; const o = data.onlineOrders[idx], cSel = document.getElementById('aw-client').value, cId = cSel ? parseInt(cSel) : null, cName = cId ? data.clients.find(c=>c.id===cId).name : "Al Contado", pt = document.getElementById('aw-payment').value, s = { id: newId(), date: new Date().toISOString(), clientId: cId, clientName: cName, items: o.items, total: o.total, payType: pt, creditDays: pt==='credito5'? 5 : pt==='credito'? 30 : 0, dueDate: pt==='credito5'? new Date(Date.now() + 5*24*60*60*1000).toISOString().split('T')[0] : pt==='credito'? new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0] : null, paid: pt !== 'credito5' && pt !== 'credito' }; s.items.forEach(i => { if(i.type !== 'recipe'){ const p = data.products.find(x => x.id == i.id); if(p) p.stock = Math.max(0, p.stock - i.qty); } }); data.sales.push(s); data.onlineOrders.splice(idx, 1); save(); closeModal('modal-approve-web'); refreshAdminViews(); }
+
+function openApproveWeb(id) { 
+    const o = data.onlineOrders.find(x => x.id === id); if(!o) return; 
+    document.getElementById('aw-order-id').value = id; 
+    document.getElementById('aw-details').innerHTML = `<strong>${o.clientName}</strong> - ${fmt(o.total)}`; 
+    
+    const s = document.getElementById('aw-client'); s.innerHTML = '<option value="">— Al Contado —</option>'; 
+    data.clients.forEach(c => s.innerHTML += `<option value="${c.id}">${c.name}</option>`); 
+    if(o.clientId) s.value = o.clientId; 
+    
+    document.getElementById('aw-payment').value = o.payType || 'transferencia'; 
+    document.getElementById('aw-credit-days').value = o.creditDays || 15;
+    document.getElementById('aw-credit-wrap').style.display = (o.payType === 'credito') ? 'block' : 'none';
+
+    openModal('modal-approve-web'); 
+}
+
+function confirmWebOrder() { 
+    const id = parseInt(document.getElementById('aw-order-id').value), idx = data.onlineOrders.findIndex(x => x.id === id); if(idx === -1) return; 
+    const o = data.onlineOrders[idx], cSel = document.getElementById('aw-client').value, cId = cSel ? parseInt(cSel) : null, cName = cId ? data.clients.find(c=>c.id===cId).name : "Al Contado", pt = document.getElementById('aw-payment').value; 
+    
+    let cd = 0, dd = null;
+    if(pt === 'credito5') cd = 5;
+    if(pt === 'credito') cd = parseInt(document.getElementById('aw-credit-days').value) || 15;
+    if(cd > 0) { const d = new Date(); d.setDate(d.getDate() + cd); dd = d.toISOString().split('T')[0]; }
+
+    const s = { id: newId(), date: new Date().toISOString(), clientId: cId, clientName: cName, items: o.items, total: o.total, payType: pt, creditDays: cd, dueDate: dd, paid: pt !== 'credito5' && pt !== 'credito' }; 
+    s.items.forEach(i => { if(i.type !== 'recipe'){ const p = data.products.find(x => x.id == i.id); if(p) p.stock = Math.max(0, p.stock - i.qty); } }); 
+    data.sales.push(s); data.onlineOrders.splice(idx, 1); save(); closeModal('modal-approve-web'); refreshAdminViews(); 
+}
 function deleteWebOrder(id) { if(!confirm("¿Rechazar?")) return; data.onlineOrders = data.onlineOrders.filter(x => x.id !== id); save(); renderWebOrders(); updateAlertBadge(); }
 
 // ADMIN COMPRAS, CLIENTES, VENTAS
