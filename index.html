@@ -324,10 +324,25 @@ async function loadFromCloud() {
       
       // --- INICIO DE LA CIRUGÍA: Rescate de pedidos locales ---
       const localOrders = data.onlineOrders || [];
+      const localSales = data.sales || [];
       if(!cd.onlineOrders) cd.onlineOrders = [];
+      
+      // 1. Evitar que pedidos ya cobrados/eliminados vuelvan a aparecer como fantasmas
+      if (appMode === 'admin') {
+          cd.onlineOrders = cd.onlineOrders.filter(co => !localSales.find(s => s.id === co.id));
+      }
+
+      // 2. Conservar el estado avanzado (Evita que regrese de Preparando a Pendiente)
       localOrders.forEach(lo => {
-         // Si el pedido está en el celular/PC pero aún no subió a la nube, lo rescatamos
-         if(!cd.onlineOrders.find(co => co.id === lo.id)) cd.onlineOrders.push(lo);
+         let cloudOrder = cd.onlineOrders.find(co => co.id === lo.id);
+         if(!cloudOrder) {
+             cd.onlineOrders.push(lo);
+         } else {
+             const levels = { 'pending': 0, 'preparing': 1, 'ready': 2 };
+             const localLevel = levels[lo.status || 'pending'] || 0;
+             const cloudLevel = levels[cloudOrder.status || 'pending'] || 0;
+             if (localLevel > cloudLevel) cloudOrder.status = lo.status;
+         }
       });
       // --- FIN DE LA CIRUGÍA ---
 
@@ -521,16 +536,20 @@ function markOrderPreparing(id) {
     const o = data.onlineOrders.find(x => x.id === id);
     if(!o) return;
     o.status = 'preparing';
-    save();
+    save(); // Sube al JSON de la tienda
     renderWebOrders();
+    // Forzar actualización inmediata en las celdas de tu Google Sheets
+    try { fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'updateStatus', id: id, status: 'PREPARANDO' }) }); } catch(e){}
 }
 
 function notifyOrderReady(id) { 
     const o = data.onlineOrders.find(x => x.id === id); 
     if(!o) return;
     o.status = 'ready';
-    save();
+    save(); // Sube al JSON de la tienda
     renderWebOrders();
+    // Forzar actualización inmediata en las celdas de tu Google Sheets
+    try { fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'updateStatus', id: id, status: 'LISTO' }) }); } catch(e){}
 
     if(!o.clientPhone) return alert("El cliente no tiene teléfono guardado, pero el pedido ya figura como 'Listo'."); 
     let m = `Hola *${o.clientName}* 👋\n\n¡Tu pedido ya está LISTO! 🎉\n\nTotal a pagar: ${fmt(o.total)}\n\nTe esperamos.`; 
