@@ -376,7 +376,7 @@ function handleAuth() {
 
 function logoutClient() { loggedInClient = null; localStorage.removeItem('client_logged_in'); document.getElementById('auth-name').value = ''; document.getElementById('auth-phone').value = ''; document.getElementById('auth-pin').value = ''; checkAuthName(); showClientPage('account', document.getElementById('nav-account')); }
 
-// === MODIFICACIÓN: DASHBOARD DEL CLIENTE (MUESTRA ESTADOS REALES) ===
+// === MODIFICACIÓN: DASHBOARD DEL CLIENTE (MUESTRA ESTADOS REALES Y REPARA IDS) ===
 function refreshClientDashboard() { 
     if(!loggedInClient) return; 
     document.getElementById('dash-name').textContent = `Hola, ${loggedInClient.name}`; 
@@ -393,7 +393,8 @@ function refreshClientDashboard() {
         res.innerHTML = `<div class="ok-card"><div style="font-size:2rem">✅</div><h3 style="color:var(--green); margin:8px 0;">¡Estás al día!</h3><p style="font-size:0.9rem;">No tienes deudas pendientes.</p></div>`; 
     } 
     
-    const wb = document.getElementById('client-web-orders'), mo = (data.onlineOrders || []).filter(o => String(o.clientId) === String(loggedInClient.id)); 
+    // MUESTRA PEDIDOS (Con filtro mejorado por si el ID falló en el pasado)
+    const wb = document.getElementById('client-web-orders'), mo = (data.onlineOrders || []).filter(o => String(o.clientId) === String(loggedInClient.id) || (o.clientName && o.clientName.toLowerCase() === loggedInClient.name.toLowerCase())); 
     if(mo.length > 0) { 
         wb.innerHTML = mo.map(o => {
             const sMap = { 
@@ -404,7 +405,7 @@ function refreshClientDashboard() {
             const st = sMap[o.status || 'pending'];
             return `<div class="card" style="padding:12px; border-left: 4px solid ${st.c};"><div class="flex-between" style="font-size:0.8rem; color:var(--muted); margin-bottom:8px;"><span>${dateStr(o.date)}</span><span class="badge" style="background:${st.c}22; color:${st.c};">${st.t}</span></div><div style="font-size:0.9rem;">${o.items.map(i=>`${i.qty}x ${i.name}`).join(', ')}</div><div class="flex-between mt-10"><span class="fw-bold text-yellow">${fmt(o.total)}</span><span style="font-size:0.8rem">${o.payType}</span></div></div>`;
         }).join(''); 
-    } else wb.innerHTML = `<p class="text-muted" style="text-align:center; font-size:0.85rem;">No tienes pedidos en preparación.</p>`; 
+    } else wb.innerHTML = `<p class="text-muted" style="text-align:center; font-size:0.85rem;">No tienes pedidos web pendientes.</p>`; 
 }
 
 function renderClientCatalog() { const c = document.getElementById('client-catalog-container'), items = [...(data.recipes || []), ...(data.products || []).filter(p => p.stock > 0)]; if(items.length === 0) { c.innerHTML = `<p style="grid-column:span 2;text-align:center;color:var(--muted);padding:40px 0;">No hay productos.</p>`; return; } c.innerHTML = items.map(i => `<div class="product-card"><div class="emoji">${i.emoji || '📦'}</div><div class="pname">${i.name}</div><div class="pprice">${fmt(i.price)}</div><button class="btn btn-primary" style="margin-top:8px; padding:6px; width:100%; border-radius:6px;" onclick="addToStoreCart(${i.id}, '${i.type || 'simple'}')">+ Añadir</button></div>`).join(''); }
@@ -459,7 +460,7 @@ async function sendWebOrder() {
     const no = { 
         id: newId(), date: new Date().toISOString(), clientId: loggedInClient.id, clientName: loggedInClient.name, clientPhone: loggedInClient.phone || "", 
         payType: pt, creditDays: cd, receipt: receiptBase64, items: storeCart.map(i => ({...i})), total: storeCart.reduce((s,i) => s + (i.price*i.qty), 0), 
-        status: 'pending' // SIEMPRE ENTRA COMO PENDIENTE
+        status: 'pending' 
     }; 
 
     try { fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'newOrder', order: no }) }); } catch(e) {} 
